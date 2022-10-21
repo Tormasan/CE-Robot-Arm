@@ -1,5 +1,6 @@
 
 #include <Stepper.h>
+#include <assert.h>
 
 const int stepsPerRevolution = 2000;  // change this to fit the number of steps per revolution
 const int steps1PerRevolution = 2000;
@@ -9,7 +10,7 @@ const int rot2div = 144;
 const int scale= 10;
 
 const int J1stepPin = 8;
-const int J1dirPin = 9;
+const int J1dirPin = 5;
 const int J2stepPin = 6;
 const int J2dirPin = 7;
 const int J3stepPin = 10;
@@ -23,23 +24,16 @@ float thet2=PI/2;
 
 int delayvar = 10;
 
-int16_t buf[300];
-int16_t Ary[50];
-int16_t thd0[50];
-int16_t thd1[50];
-int16_t thd2[50];
-String inData ;
-String th0;
-String th1;
-String th2;
-uint16_t i=0, j=0;
+int16_t buf[100];
+
+int16_t thd0[20];
+int16_t thd1[20];
+int16_t thd2[20];
 
 
-
-Stepper baseStepper(stepsPerRevolution, 8, 9); // step 8 dir 9 
+Stepper baseStepper(stepsPerRevolution, 8, 5); // step 8 dir 9 
 Stepper rot1Stepper(steps1PerRevolution, 6, 7);
 Stepper rot2Stepper(stepsPerRevolution, 10, 11);
-
 
 
 void stepper2(int J1step, int J2step, int J3step){
@@ -59,9 +53,10 @@ void stepper2(int J1step, int J2step, int J3step){
   J3stepabs=abs(J3step);
 
 
-   if (J1step < 0)
+  if (J1step < 0)
   {
     J1el=-1;
+    
   }
   else if (J1step > 0)
   {
@@ -103,7 +98,14 @@ void stepper2(int J1step, int J2step, int J3step){
       }
       csicska--;
     } 
-    /////// J3 ////////////////////////////////
+    
+    if (J1cur < J1stepabs)
+    {
+      J1cur = ++J1cur;
+      baseStepper.step(J1el);
+      delayMicroseconds(curDelay);
+    }
+    
     if (J3cur < J3stepabs)
     {
       J3cur = ++J3cur;
@@ -111,12 +113,7 @@ void stepper2(int J1step, int J2step, int J3step){
       delayMicroseconds(curDelay);
     }
 
-    if (J1cur < J1stepabs)
-    {
-      J1cur = ++J1cur;
-      baseStepper.step(J1el);
-      delayMicroseconds(curDelay);
-    }
+    
   }
 }
 
@@ -124,13 +121,17 @@ void stepper2(int J1step, int J2step, int J3step){
 void odavisz(){
   for (int i=0; i<sizeof thd0/sizeof thd0[0]; i++) {
     stepper2(thd0[i], thd1[i], thd2[i]);
+    //Serial.println(thd0[i]);
+    //Serial.println(thd1[i]);
+    //Serial.println(thd2[i]);
     //delay(5);
   }
+  //Serial.println("A");
 }
 
 
 void manual(){
-
+  
   char inChar = Serial.read();
   long int inInt = Serial.parseInt();
   Serial.println(inChar);
@@ -185,74 +186,77 @@ void manual(){
 }
 
 
-void printintdb(int16_t* buf, int len){
-  for (int i = 0; i < len; i++) {
-    Serial.println(buf[i]);
-  }
+
+int16_t read_int16_t(uint8_t* ByteArray, size_t offset)
+{
+  return *((int16_t *)&ByteArray[offset]);
 }
-
-
-void stringIntArray(String msg2,int16_t* Ary){
-  uint8_t i=0, j=0;
-  int sz;
-  char carray[7];
-  for (int j = 0; j<msg2.length(); j++)  {
-    
-    if (msg2.charAt(j)==','){
-      int n;
-      n = atoi(carray); 
-      Ary[i]=n;
-      i++;
-      sz=0;
-      carray[7]=' ';
-      carray[6]=' ';
-      carray[5]=' ';
-      carray[4]=' ';
-      carray[3]=' ';
-      carray[2]=' ';
-      carray[1]=' ';
-      carray[0]=' ';
-    }
-    else{
-      carray[sz]=msg2.charAt(j);
-      sz++;
-    }
-  }
-}
-
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   baseStepper.setSpeed(100);
   rot1Stepper.setSpeed(250);
   rot2Stepper.setSpeed(50);
 
 }
 
+
+uint8_t bytes[200];
+int indexBuff=0;
+
+
 void loop() {
-
-  if (Serial.available() > 0) {
-    inData = Serial.readString();
   
+  while (Serial.available() > 0) {
   
+    //manual();
 
-    int th0end=inData.indexOf('B');
-    int th1end=inData.indexOf('N');
-    int th2end=inData.indexOf('M');
-
-    String th0 = inData.substring(0,th0end-1);
-    String th1 = inData.substring(th0end+1,th1end);
-    String th2 = inData.substring(th1end+1,th2end);
+  
+    Serial.setTimeout(10);
+    int len = Serial.readBytes(bytes,200);
     
-    Serial.println(th2);
-    stringIntArray(th0,thd0);
-    stringIntArray(th1,thd1);
-    stringIntArray(th2,thd2);
+    //uint8_t bytes[] = {56,130,87,0,85,0,83,0,81,0,79,0,78,0,76,0,74,0,73,0,71,0,70,0,68,0,67,0,65,0,64,0,63,0,61,0,60,0,59,0};
+    
+    switch (indexBuff) {
+      case 0:
+        //Serial.println("th0");
+        for (int i=0; i<len;i=i+2){
+          int16_t result_0 = read_int16_t(bytes, i);
+          //Serial.println(result_0);
+          thd0[i/2]=result_0;
+        }
+        break;
+      
+      case 1:
+        //Serial.println("th1");
+        for (int i=0; i<len;i=i+2){
+          int16_t result_0 = read_int16_t(bytes, i);
+          //Serial.println(result_0);
+          thd1[i/2]=result_0;
+        }
+        break;
+      
+      case 2:
+        //Serial.println("th2");
+        for (int i=0; i<len;i=i+2){
+          int16_t result_0 = read_int16_t(bytes, i);
+          //Serial.println(result_0);
+          thd2[i/2]=result_0;
+        }   
+        break;
+      
+      default:
+          
+          indexBuff=0;
+        break;
+      
+    }
 
-    printintdb(thd2,10);
-
-
-    odavisz();
-  }
+    if (indexBuff==2){
+      odavisz();
+    }
+    indexBuff++; 
+  }   
 }
+
