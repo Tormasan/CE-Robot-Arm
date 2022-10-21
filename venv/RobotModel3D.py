@@ -5,11 +5,16 @@ import numpy as np
 from mpl_toolkits import mplot3d
 import serial
 import time
+from typing import List
+import keyboard
 
-arduino = serial.Serial(port='COM5', baudrate=9600, timeout=.1)
+
+arduino = serial.Serial(port='COM6', baudrate=115200, timeout=.1)
 minn=-1
 maxn=1
-
+thet0=0
+thet1=0
+thet2=0
 def test():
     thet0 = float(0)
     thet1 = float(0)
@@ -120,7 +125,7 @@ def test():
     print(result2)
 
 
-def MoveL(thet0,thet1,thet2,xdel,ydel,zdel,rangen):
+def MoveL(xdel,ydel,zdel):
     B = 0.19
     CB = 0.03
     CH = 0.2
@@ -131,8 +136,11 @@ def MoveL(thet0,thet1,thet2,xdel,ydel,zdel,rangen):
     thetdel0 = []
     thetdel1 = []
     thetdel2 = []
+    rangen=20 # step iteration
     for i in range(rangen):
-
+        global thet0
+        global thet1
+        global thet2
         thetdel0.append(
             clamp((ydel * cos(thet0) - xdel * sin(thet0)) / (CB - HL * sin(thet1 + thet2) + CH * cos(thet1)), minn,
                   maxn))
@@ -186,7 +194,7 @@ def MoveL(thet0,thet1,thet2,xdel,ydel,zdel,rangen):
     plt.ylabel('y')
     plt.show()
 
-    return thetresult0, thetresult1, thetresult2, thet0, thet1, thet2
+    return thetresult0, thetresult1, thetresult2
 
 
 def clamp(n, minn, maxn):
@@ -198,24 +206,22 @@ def clamp(n, minn, maxn):
         return n
 
 
+def convert_to_bytes(input_array:List[np.int16]):
+    output_bytes = bytearray()
+    for input_num in input_array:
+        output_bytes += (input_num.to_bytes(length=2, byteorder="little", signed=True))
+    return output_bytes
 
-buffthd0, buffthd1,buffthd2,thnex0,thnex1,thnex2 = MoveL(0,0,0,0.0025,0.0025,0,20)
-#buff1thd0, buff1thd1,buff1thd2,th1nex0,th1nex1,th1nex2 = MoveL(thnex0,thnex1,thnex2,-0.0025,0,0,50)
-#buff2thd0, buff2thd1,buff2thd2,th2nex0,th2nex1,th2nex2 = MoveL(th1nex0,th1nex1,th1nex2,0,-0.0025,0,50)
+def conMoveL(x,y,z):
+
+    buffthd0, buffthd1,buffthd2 = MoveL(x,y,z)
+    write_read(buffthd0, buffthd1, buffthd2)
+    time.sleep(3)
 
 
 
-def write_read(x):
-    arduino.write(bytes(x, 'utf-8'))
-    time.sleep(0.05)
-    data = arduino.readline()
-    return data
-while True:
-    num = input("Enter a number: ")
-    value = write_read("B"+str(buffthd0)+"N"+str(buffthd1)+"M"+str(buffthd2))
-    print(value) # printing the value
 
-print("B"+str(buffthd0)+"N"+str(buffthd1)+"M"+str(buffthd2))
+
 #rajzolassal tervezes ez nagyon tavoli cel
 #leveskavargatós program elkészítés
 #zonahatár jelzése warning-al tervezéskor vagy a 3 d ábrán
@@ -223,5 +229,67 @@ print("B"+str(buffthd0)+"N"+str(buffthd1)+"M"+str(buffthd2))
 #serial interface es tanitas
 
 
+def write_read(buff_0, buff_1, buff_2):
+    arduino.write(convert_to_bytes(buff_0))
+    time.sleep(.05)
+    arduino.write(convert_to_bytes(buff_1))
+    time.sleep(.05)
+    arduino.write(convert_to_bytes(buff_2))
+    time.sleep(.05)
+
+
+step=0.001
+
+while True:
+
+    #x = float(input("x: "))
+    #y = float(input("y: "))
+    #z = float(input("z: "))
+
+    conMoveL(0, 0.001, 0)
+    conMoveL(0, -0.001, 0)
+
+    #print(arduino.readall())
+
+
+
+
+
+    #while True:
+
+
+     #   if keyboard.read_key() == "a":
+      #      conMoveL(0,0,step)
+       #     break
+        #if keyboard.read_key() == "d":
+         #   conMoveL(0,0,-step)
+          #  break
+        #if keyboard.read_key() == "q":
+         #   conMoveL(0,step,0)
+          #  break
+        #if keyboard.read_key() == "e":
+         #   conMoveL(0,-step,0)
+          #  break
+        #if keyboard.read_key() == "z":
+         #   conMoveL(step,0,0)
+          #  break
+        #if keyboard.read_key() == "c":
+         #   conMoveL(-step,0,0)
+          #  break
+
+
+
+    #write_read(buffthd0, buffthd1, buffthd2)
+    #time.sleep(5)
+    #write_read(buff1thd0, buff1thd1, buff1thd2)
+    #time.sleep(5)
+
+
+    #print(arduino.inWaiting())
+    #print(arduino.readline())
+
+
+    #write_read(buff2thd0, buff2thd1, buff2thd2)
+    #time.sleep(6.05)
 
 
