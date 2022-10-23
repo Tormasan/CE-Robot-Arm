@@ -24,11 +24,10 @@ float thet2=PI/2;
 
 int delayvar = 10;
 
-int16_t buf[100];
 
-int16_t thd0[20];
-int16_t thd1[20];
-int16_t thd2[20];
+int16_t thd0[50];
+int16_t thd1[50];
+int16_t thd2[50];
 
 
 Stepper baseStepper(stepsPerRevolution, 8, 5); // step 8 dir 9 
@@ -126,7 +125,7 @@ void odavisz(){
     //Serial.println(thd2[i]);
     //delay(5);
   }
-  //Serial.println("A");
+  Serial.println("k");
 }
 
 
@@ -202,19 +201,20 @@ void setup() {
 }
 
 
-uint8_t bytes[200];
+uint8_t bytes[320];
 int indexBuff=0;
 
 
 void loop() {
+
   
   while (Serial.available() > 0) {
-  
+    
     //manual();
 
   
     Serial.setTimeout(10);
-    int len = Serial.readBytes(bytes,200);
+    int len = Serial.readBytes(bytes,320);
     
     //uint8_t bytes[] = {56,130,87,0,85,0,83,0,81,0,79,0,78,0,76,0,74,0,73,0,71,0,70,0,68,0,67,0,65,0,64,0,63,0,61,0,60,0,59,0};
     
@@ -245,7 +245,6 @@ void loop() {
           thd2[i/2]=result_0;
         }   
         break;
-      
       default:
           
           indexBuff=0;

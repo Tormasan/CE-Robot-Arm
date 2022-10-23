@@ -174,6 +174,13 @@ def MoveL(xdel,ydel,zdel):
     print(thetresult1)
     print(thetresult2)
 
+    #ploting(x,y,z)
+
+
+    return thetresult0, thetresult1, thetresult2
+
+
+def ploting(x,y,z):
     plt.figure()
     plt.subplot(221)
     plt.plot(z, x)
@@ -194,9 +201,6 @@ def MoveL(xdel,ydel,zdel):
     plt.ylabel('y')
     plt.show()
 
-    return thetresult0, thetresult1, thetresult2
-
-
 def clamp(n, minn, maxn):
     if n < minn:
         return minn
@@ -204,7 +208,6 @@ def clamp(n, minn, maxn):
         return maxn
     else:
         return n
-
 
 def convert_to_bytes(input_array:List[np.int16]):
     output_bytes = bytearray()
@@ -216,18 +219,8 @@ def conMoveL(x,y,z):
 
     buffthd0, buffthd1,buffthd2 = MoveL(x,y,z)
     write_read(buffthd0, buffthd1, buffthd2)
-    time.sleep(3)
-
-
-
-
-
-#rajzolassal tervezes ez nagyon tavoli cel
-#leveskavargatós program elkészítés
-#zonahatár jelzése warning-al tervezéskor vagy a 3 d ábrán
-#sd kártyára program mentés
-#serial interface es tanitas
-
+    while arduino.read()!=b'k':  #acknowladge
+        time.sleep(dela)
 
 def write_read(buff_0, buff_1, buff_2):
     arduino.write(convert_to_bytes(buff_0))
@@ -238,21 +231,26 @@ def write_read(buff_0, buff_1, buff_2):
     time.sleep(.05)
 
 
-step=0.001
-
+step=0.002
+dela=.01 #azért kell várni hogy ki tudja számolni az ik-t
 while True:
 
     #x = float(input("x: "))
     #y = float(input("y: "))
     #z = float(input("z: "))
 
-    conMoveL(0, 0.001, 0)
-    conMoveL(0, -0.001, 0)
+    time.sleep(1)
+    conMoveL(-step, 0,0)
+    conMoveL(-step, 0, 0)
+    conMoveL(-step, 0, 0)
 
+    conMoveL(step, 0,0)
+    conMoveL(step, 0, 0)
+    conMoveL(step, 0, 0)
+
+
+    #conMoveL( 0,0,0)
     #print(arduino.readall())
-
-
-
 
 
     #while True:
@@ -293,3 +291,8 @@ while True:
     #time.sleep(6.05)
 
 
+
+#-y irányba mozgást kijavítani
+#rajzolassal tervezes robotDK
+#arduino steppeles optimalizalas
+#leveskavargatós program elkészítés
