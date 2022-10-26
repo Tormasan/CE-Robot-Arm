@@ -227,8 +227,16 @@ void loop() {
           thd0[i/2]=result_0;
         }
         break;
-      
       case 1:
+        //Serial.println("th0");
+        for (int i=0; i<len;i=i+2){
+          int16_t result_0 = read_int16_t(bytes, i);
+          //Serial.println(result_0);
+          thd0[i/2]=result_0;
+        }
+        break;
+      
+      case 2:
         //Serial.println("th1");
         for (int i=0; i<len;i=i+2){
           int16_t result_0 = read_int16_t(bytes, i);
@@ -237,7 +245,7 @@ void loop() {
         }
         break;
       
-      case 2:
+      case 3:
         //Serial.println("th2");
         for (int i=0; i<len;i=i+2){
           int16_t result_0 = read_int16_t(bytes, i);
@@ -252,7 +260,7 @@ void loop() {
       
     }
 
-    if (indexBuff==2){
+    if (indexBuff==3){
       odavisz();
     }
     indexBuff++; 

@@ -6,6 +6,11 @@ from mpl_toolkits import mplot3d
 import serial
 import time
 from typing import List
+import re
+
+from gcodeparser import GcodeParser
+
+
 import keyboard
 
 
@@ -222,7 +227,11 @@ def conMoveL(x,y,z):
     while arduino.read()!=b'k':  #acknowladge
         time.sleep(dela)
 
+#def posMoveL(xpos, ypos, zpos):
+
 def write_read(buff_0, buff_1, buff_2):
+    arduino.write(convert_to_bytes(buff_0))
+    time.sleep(.05)
     arduino.write(convert_to_bytes(buff_0))
     time.sleep(.05)
     arduino.write(convert_to_bytes(buff_1))
@@ -231,7 +240,52 @@ def write_read(buff_0, buff_1, buff_2):
     time.sleep(.05)
 
 
-step=0.002
+nex=200.0 #start pos x
+ney=30.0
+nez=390.0
+dx=0 #pos dif
+dy=0
+dz=0
+
+def gcode_read():
+    # open gcode file and store contents as variable
+    with open('C:/Users/TormaPC/Documents/RoboDK/Programs/Prog2.txt', 'r') as f:
+        for line in f:
+            sor=str(line)
+            pat=re.compile('-?\d{1,4}\.')
+            sor_float=[]
+            for pos in re.findall(pat,sor): #make a list of all numbers 6 (3pos) (3orient)
+                sor_float.append(float(pos))
+
+            if (len(sor_float)>3):  # read the first 3 pos to a variable
+                x = sor_float[0]
+                y = sor_float[1]
+                z = sor_float[2]
+
+                global dx, dy, dz, nex, ney, nez
+
+                dx=x-nex
+                dy=y-ney
+                dz=z-nez
+
+                div=10000
+                time.sleep(3)
+                conMoveL((dz / div), (dy / div), -(dx / div))
+                time.sleep(3)
+                nex=x
+                ney=y
+                nez=z
+                print(dx,dy,dz)
+                #print(nex,ney,nez)
+
+
+
+
+
+
+
+
+step=0.004
 dela=.01 #azért kell várni hogy ki tudja számolni az ik-t
 while True:
 
@@ -240,40 +294,34 @@ while True:
     #z = float(input("z: "))
 
     time.sleep(1)
-    conMoveL(-step, 0,0)
-    conMoveL(-step, 0, 0)
-    conMoveL(-step, 0, 0)
 
-    conMoveL(step, 0,0)
-    conMoveL(step, 0, 0)
-    conMoveL(step, 0, 0)
-
+    #gcode_read()
 
     #conMoveL( 0,0,0)
     #print(arduino.readall())
 
 
-    #while True:
+    while True:
 
 
-     #   if keyboard.read_key() == "a":
-      #      conMoveL(0,0,step)
-       #     break
-        #if keyboard.read_key() == "d":
-         #   conMoveL(0,0,-step)
-          #  break
-        #if keyboard.read_key() == "q":
-         #   conMoveL(0,step,0)
-          #  break
-        #if keyboard.read_key() == "e":
-         #   conMoveL(0,-step,0)
-          #  break
-        #if keyboard.read_key() == "z":
-         #   conMoveL(step,0,0)
-          #  break
-        #if keyboard.read_key() == "c":
-         #   conMoveL(-step,0,0)
-          #  break
+        if keyboard.read_key() == "a":
+            conMoveL(0,0,step)
+            break
+        if keyboard.read_key() == "d":
+            conMoveL(0,0,-step)
+            break
+        if keyboard.read_key() == "q":
+            conMoveL(0,step,0)
+            break
+        if keyboard.read_key() == "e":
+            conMoveL(0,-step,0)
+            break
+        if keyboard.read_key() == "z":
+            conMoveL(step,0,0)
+            break
+        if keyboard.read_key() == "c":
+            conMoveL(-step,0,0)
+            break
 
 
 
@@ -292,7 +340,6 @@ while True:
 
 
 
-#-y irányba mozgást kijavítani
 #rajzolassal tervezes robotDK
 #arduino steppeles optimalizalas
 #leveskavargatós program elkészítés
