@@ -184,7 +184,7 @@ def MoveL(xdel, ydel,zdel):
     print(thetresult1)
     print(thetresult2)
 
-    ploting(x,y,z)
+    #ploting(x,y,z)
 
 
     return thetresult0, thetresult1, thetresult2
@@ -273,10 +273,10 @@ def gcode_read():
                 dy=y-ney
                 dz=z-nez
 
-                div=10000
-                time.sleep(3)
-                conMoveL((dz / div), (dy / div), -(dx / div))
-                time.sleep(3)
+                div=20000
+
+                conMoveL((dx / div), (dy / div), (dz / div))
+
                 nex=x
                 ney=y
                 nez=z
@@ -323,10 +323,10 @@ while True:
     #z = float(input("z: "))
 
     time.sleep(1)
-    manualL()
+    #manualL()
     #conMoveL(0,-step, 0)
     #conMoveL(0, step, 0)
-    #gcode_read()
+    gcode_read()
 
     #conMoveL( 0,0,0)
     #print(arduino.readall())
@@ -346,6 +346,7 @@ while True:
 
 
 
-#rajzolassal tervezes robotDK
+#megcsavarozni ezt a gecit
+#roboDK paja teszteles új ik-val
 #arduino steppeles optimalizalas
 #leveskavargatós program elkészítés
