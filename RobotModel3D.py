@@ -130,11 +130,11 @@ def test():
     print(result2)
 
 
-def MoveL(xdel,ydel,zdel):
-    B = 0.19
-    CB = 0.03
-    CH = 0.2
-    HL = 0.2
+def MoveL(xdel, ydel,zdel):
+    r0=0.03
+    r1=0.2
+    r2=0.2
+
     x = []
     y = []
     z = []
@@ -147,27 +147,32 @@ def MoveL(xdel,ydel,zdel):
         global thet1
         global thet2
         thetdel0.append(
-            clamp((ydel * cos(thet0) - xdel * sin(thet0)) / (CB - HL * sin(thet1 + thet2) + CH * cos(thet1)), minn,
+            clamp((ydel * cos(thet0) - xdel * sin(thet0)) / (r0 + r2 * cos(thet1 + thet2) + r1 * sin(thet1)), minn,
                   maxn))
 
-        thetdel1.append(clamp(-(
-                    zdel * cos(thet1) * cos(thet2) - zdel * sin(thet1) * sin(thet2) + xdel * cos(thet0) * cos(
-                thet1) * sin(thet2) + xdel * cos(thet0) * cos(thet2) * sin(thet1) + ydel * cos(thet1) * sin(
-                thet0) * sin(thet2) + ydel * cos(thet2) * sin(thet0) * sin(thet1)) / (CH * cos(thet2)), minn, maxn))
 
-        thetdel2.append(clamp((CH * zdel * sin(thet1) - CH * xdel * cos(thet0) * cos(thet1) + HL * zdel * cos(
-            thet1) * cos(thet2) - CH * ydel * cos(thet1) * sin(thet0) - HL * zdel * sin(thet1) * sin(
-            thet2) + HL * xdel * cos(thet0) * cos(thet1) * sin(thet2) + HL * xdel * cos(thet0) * cos(thet2) * sin(
-            thet1) + HL * ydel * cos(thet1) * sin(thet0) * sin(thet2) + HL * ydel * cos(thet2) * sin(thet0) * sin(
-            thet1)) / (CH * HL * cos(thet2)), minn, maxn))
+        thetdel1.append(
+            clamp(
+                -(zdel * cos(thet1) * sin(thet2) + zdel * cos(thet2) * sin(thet1) - xdel * cos(thet0) * cos(thet1) * cos(
+                thet2) - ydel * cos(thet1) * cos(thet2) * sin(thet0) + xdel * cos(thet0) * sin(thet1) * sin(
+                thet2) + ydel * sin(thet0) * sin(thet1) * sin(thet2)) / (r1 * cos(thet2)), minn, maxn))
+
+
+
+        thetdel2.append(
+            clamp(
+                -(r1*zdel*cos(thet1) + r1*xdel*cos(thet0)*sin(thet1) - r2*zdel*cos(thet1)*sin(thet2) -
+                r2*zdel*cos(thet2)*sin(thet1) + r1*ydel*sin(thet0)*sin(thet1) - r2*ydel*sin(thet0)*sin(thet1)*sin(thet2) +
+                r2*xdel*cos(thet0)*cos(thet1)*cos(thet2) + r2*ydel*cos(thet1)*cos(thet2)*sin(thet0) -
+                r2*xdel*cos(thet0)*sin(thet1)*sin(thet2))/(r1*r2*cos(thet2)), minn, maxn))
 
         thet0 = thet0 + thetdel0[i]
         thet1 = thet1 + thetdel1[i]
         thet2 = thet2 + thetdel2[i]
 
-        x.append(cos(thet0) * (CB - HL * sin(thet1 + thet2) + CH * cos(thet1)))
-        y.append(sin(thet0) * (CB - HL * sin(thet1 + thet2) + CH * cos(thet1)))
-        z.append(B - HL * cos(thet1 + thet2) - CH * sin(thet1))
+        x.append(cos(thet0)*(r0 + r2*cos(thet1 + thet2) + r1*sin(thet1)))
+        y.append(sin(thet0)*(r0 + r2*cos(thet1 + thet2) + r1*sin(thet1)))
+        z.append(r1*cos(thet1) - r2*sin(thet1 + thet2) + 19/100)
 
     my_list0 = thetdel0
     my_list1 = thetdel1
@@ -179,7 +184,7 @@ def MoveL(xdel,ydel,zdel):
     print(thetresult1)
     print(thetresult2)
 
-    #ploting(x,y,z)
+    ploting(x,y,z)
 
 
     return thetresult0, thetresult1, thetresult2
@@ -189,13 +194,13 @@ def ploting(x,y,z):
     plt.figure()
     plt.subplot(221)
     plt.plot(z, x)
-    plt.plot([0, 0.4, 0.4], [0.23, 0.23, 0])
+    plt.plot([0, 0.2, 0.2], [0.4, 0.4, 0])
     plt.xlabel('z')
     plt.ylabel('x')
 
     plt.subplot(2, 2, 2)  # projection='polar'
     plt.plot(y, x)
-    plt.plot([0, 0, 0], [0.23, 0.23, 0])
+    plt.plot([0, 0, 0], [0.4, 0.4, 0])
     plt.xlabel('y')
     plt.ylabel('x')
 
@@ -279,6 +284,30 @@ def gcode_read():
                 #print(nex,ney,nez)
 
 
+def manualL():
+    while True:
+
+
+        if keyboard.read_key() == "a":
+           conMoveL(0,0,step)
+           break
+        if keyboard.read_key() == "d":
+           conMoveL(0,0,-step)
+           break
+        if keyboard.read_key() == "q":
+           conMoveL(0,step,0)
+           break
+        if keyboard.read_key() == "e":
+           conMoveL(0,-step,0)
+           break
+        if keyboard.read_key() == "z":
+           conMoveL(step,0,0)
+           break
+        if keyboard.read_key() == "c":
+           conMoveL(-step,0,0)
+           break
+
+
 
 
 
@@ -294,36 +323,13 @@ while True:
     #z = float(input("z: "))
 
     time.sleep(1)
-
+    manualL()
+    #conMoveL(0,-step, 0)
+    #conMoveL(0, step, 0)
     #gcode_read()
 
     #conMoveL( 0,0,0)
     #print(arduino.readall())
-
-
-    while True:
-
-
-        if keyboard.read_key() == "a":
-            conMoveL(0,0,step)
-            break
-        if keyboard.read_key() == "d":
-            conMoveL(0,0,-step)
-            break
-        if keyboard.read_key() == "q":
-            conMoveL(0,step,0)
-            break
-        if keyboard.read_key() == "e":
-            conMoveL(0,-step,0)
-            break
-        if keyboard.read_key() == "z":
-            conMoveL(step,0,0)
-            break
-        if keyboard.read_key() == "c":
-            conMoveL(-step,0,0)
-            break
-
-
 
     #write_read(buffthd0, buffthd1, buffthd2)
     #time.sleep(5)

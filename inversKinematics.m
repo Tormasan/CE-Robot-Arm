@@ -1,27 +1,43 @@
 
-syms  thet0 thet1 thet2  B CB CH HL
+
+syms  thet0 thet1 thet2  r1 r2 r0 alp0 d0
 
 %alpn rn dn thetn
-%B=0.19
-%CD=0.03
-%CH=0.2
-%HL=0.2
- 
-DH = [cos(thet0) 0 -sin(thet0) CB*cos(thet0);
-     sin(thet0) 0 cos(thet0) CB*sin(thet0);
-     0 -1 0 B;
+alp0=-pi/2
+
+d0=0.19
+rn=r0
+thetn=thet0
+alpn=alp0
+dn=d0
+
+Base = [cos(thetn) -sin(thetn)*cos(alpn) sin(thetn)*sin(alpn) rn*cos(thetn);
+     sin(thetn) cos(thetn)*cos(alpn) -cos(thetn)*sin(alpn) rn*sin(thetn);
+     0 sin(alpn) cos(alpn) dn;
      0 0 0 1]
 
-A =  [cos(thet1) -sin(thet1) 0 CH*cos(thet1);
-     sin(thet1) cos(thet1) 0 CH*sin(thet1);
+
+
+rn=r0
+thetn=thet0
+alpn=alp0
+dn=d0
+
+A0 = [cos(thet0) 0 -sin(thet0) r0*cos(thet0);
+     sin(thet0) 0 cos(thet0) r0*sin(thet0);
+     0 -1 0 dn;
+     0 0 0 1]
+
+A =  [cos(thet1-pi/2) -sin(thet1-pi/2) 0 r1*cos(thet1-pi/2);
+     sin(thet1-pi/2) cos(thet1-pi/2) 0 r1*sin(thet1-pi/2);
      0 0 1 0;
      0 0 0 1]
-B =  [cos(thet2+pi/2) -sin(thet2+pi/2) 0 HL*cos(thet2+pi/2);
-     sin(thet2+pi/2) cos(thet2+pi/2) 0 HL*sin(thet2+pi/2);
+B =  [cos(thet2+pi/2) -sin(thet2+pi/2) 0 r2*cos(thet2+pi/2);
+     sin(thet2+pi/2) cos(thet2+pi/2) 0 r2*sin(thet2+pi/2);
      0 0 1 0;
      0 0 0 1]
-     
-C = DH*A*B
+
+C = A0*A*B
 
 out = C(:,4:4) % Extract columns 3 and 4 only into a new 2D array.
 x=out(1,:)
