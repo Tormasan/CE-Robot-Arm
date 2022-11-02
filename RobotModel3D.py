@@ -131,7 +131,7 @@ def test():
 
 
 def MoveL(xdel, ydel,zdel):
-    r0=0.03
+    r0=0.0
     r1=0.2
     r2=0.2
 
@@ -193,20 +193,20 @@ def MoveL(xdel, ydel,zdel):
 def ploting(x,y,z):
     plt.figure()
     plt.subplot(221)
-    plt.plot(z, x)
-    plt.plot([0, 0.2, 0.2], [0.4, 0.4, 0])
+    plt.plot(x, z)
+    plt.plot([0, 0, 0.2], [0, 0.39, 0.39])
     plt.xlabel('z')
     plt.ylabel('x')
 
     plt.subplot(2, 2, 2)  # projection='polar'
-    plt.plot(y, x)
-    plt.plot([0, 0, 0], [0.4, 0.4, 0])
+    plt.plot(y, z)
+    plt.plot([0, 0], [0, 0.4])
     plt.xlabel('y')
     plt.ylabel('x')
 
     plt.subplot(2, 2, 3)
-    plt.plot(z, y)
-    plt.plot(0)
+    plt.plot(x, y)
+    plt.plot([0, 0.2], [0, 0])
     plt.xlabel('z')
     plt.ylabel('y')
     plt.show()
@@ -288,10 +288,10 @@ def manualL():
     while True:
 
 
-        if keyboard.read_key() == "a":
+        if keyboard.read_key() == "z":
            conMoveL(0,0,step)
            break
-        if keyboard.read_key() == "d":
+        if keyboard.read_key() == "c":
            conMoveL(0,0,-step)
            break
         if keyboard.read_key() == "q":
@@ -300,10 +300,10 @@ def manualL():
         if keyboard.read_key() == "e":
            conMoveL(0,-step,0)
            break
-        if keyboard.read_key() == "z":
+        if keyboard.read_key() == "d":
            conMoveL(step,0,0)
            break
-        if keyboard.read_key() == "c":
+        if keyboard.read_key() == "a":
            conMoveL(-step,0,0)
            break
 
