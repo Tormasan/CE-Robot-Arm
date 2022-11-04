@@ -15,8 +15,8 @@ import keyboard
 
 
 arduino = serial.Serial(port='COM6', baudrate=115200, timeout=.1)
-minn=-1
-maxn=1
+minn=-2
+maxn=2
 thet0=0
 thet1=0
 thet2=0
@@ -345,8 +345,5 @@ while True:
     #time.sleep(6.05)
 
 
-
-#megcsavarozni ezt a gecit
-#roboDK paja teszteles új ik-val
 #arduino steppeles optimalizalas
-#leveskavargatós program elkészítés
+
