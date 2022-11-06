@@ -3,29 +3,41 @@ from math import ceil,floor
 import random
 
 
-J1step=250
-J2step=300
-J3step=115
+J1stepabs=250
+J2stepabs=300
+J3stepabs=115
 
-J1stepabs = J1step
-J2stepabs = J2step
-J3stepabs = J3step
+#"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#[0, 34, 68, 102, 136, 170, 205, 239, 275, 310, 346, 382, 418, 455, 492, 529, 567, 604, 642, 680]
+#[206, 201, 196, 191, 187, 182, 177, 172, 168, 163, 159, 154, 150, 145, 140, 136, 131, 126, 122, 117]
 
-if J2step==0:
-    J2step=1
-if J1step==0:
-    J1step=12
+#[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#[647, 678, 708, 739, 770, 801, 831, 861, 890, 920, 948, 976, 1004, 1030, 1056, 1081, 1105, 1128, 1150, 1171]
+#[101, 97, 93, 88, 84, 80, 76, 71, 67, 63, 58, 54, 49, 45, 40, 35, 30, 26, 21, 16]
+# 1 vagy 2 kiesik
+
+J1stepabs = J1
+J2stepabs = J2
+J3stepabs = J3
+
+if J2stepabs==0:
+    J2stepabs=1
+if J1stepabs==0:
+    J1stepabs=1
+if J3stepabs == 0:
+    J3stepabs = 1
 flag=0
 
-osztalek= J1step / J2step
+osztalek= J1stepabs / J2stepabs
 if osztalek>1:
-    szamlalo = J1step
-    nevezo = J2step
+    if J1stepabs
+    szamlalo = J1stepabs
+    nevezo = J2stepabs
     osztalek=szamlalo/nevezo
     flag=1
 elif osztalek<1:
-    szamlalo = J2step
-    nevezo = J1step
+    szamlalo = J2stepabs
+    nevezo = J1stepabs
     osztalek=szamlalo/nevezo
     flag=2
 

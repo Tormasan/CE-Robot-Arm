@@ -1,4 +1,3 @@
-
 #include <Stepper.h>
 #include <assert.h>
 
@@ -30,7 +29,7 @@ int16_t thd1[50];
 int16_t thd2[50];
 
 
-Stepper baseStepper(stepsPerRevolution, 8, 5); // step 8 dir 9 
+Stepper baseStepper(stepsPerRevolution, 8, 5); // step 8 dir 9
 Stepper rot1Stepper(steps1PerRevolution, 6, 7);
 Stepper rot2Stepper(stepsPerRevolution, 10, 11);
 
@@ -55,7 +54,7 @@ void stepper2(int J1step, int J2step, int J3step){
   if (J1step < 0)
   {
     J1el=-1;
-    
+
   }
   else if (J1step > 0)
   {
@@ -96,15 +95,15 @@ void stepper2(int J1step, int J2step, int J3step){
         delayMicroseconds(curDelay);
       }
       csicska--;
-    } 
-    
+    }
+
     if (J1cur < J1stepabs)
     {
       J1cur = ++J1cur;
       baseStepper.step(J1el);
       delayMicroseconds(curDelay);
     }
-    
+
     if (J3cur < J3stepabs)
     {
       J3cur = ++J3cur;
@@ -112,14 +111,178 @@ void stepper2(int J1step, int J2step, int J3step){
       delayMicroseconds(curDelay);
     }
 
-    
+
+  }
+}
+
+
+void stepper1(int J1step, int J2step, int J3step){
+  int curDelay = 50;
+  int J1cur = 0;
+  int J2cur = 0;
+  int J3cur = 0;
+  int J1el;
+  int J2el;
+  int J3el;
+  int J1stepabs;
+  int J2stepabs;
+  int J3stepabs;
+
+  J1stepabs=abs(J1step);
+  J2stepabs=abs(J2step);
+  J3stepabs=abs(J3step);
+
+
+  if (J1step < 0)
+  {
+    J1el=-1;
+
+  }
+  else if (J1step > 0)
+  {
+    J1el=1;
+  }
+
+
+  if (J2step < 0)
+  {
+    J2el=-1;
+  }
+  else if (J2step > 0)
+  {
+    J2el=1;
+  }
+
+
+  if (J3step < 0)
+  {
+    J3el=-1;
+  }
+  else if (J3step > 0)
+  {
+    J3el=1;
+  }
+
+  if (J2stepabs==0)
+      {J2stepabs=1;}
+
+  if (J3stepabs == 0)
+      {J3stepabs = 1;}
+  int flag=0;
+  int szamlalo;
+  int nevezo;
+  float osztalek;
+
+  osztalek= J3stepabs / J2stepabs;
+  if (osztalek>1)
+  {
+    szamlalo = J3stepabs;
+    nevezo = J2stepabs;
+    osztalek=szamlalo/nevezo;
+    flag=1;
+  }
+  else if (osztalek<1)
+  {
+    szamlalo = J2stepabs;
+    nevezo = J3stepabs;
+    osztalek=szamlalo/nevezo;
+    flag=2;
+  }
+
+
+  float maradek = szamlalo - floor(osztalek) * nevezo;
+  float oszthato = nevezo - maradek;
+  //float eredmeny = oszthato * floor(osztalek) + ceil(osztalek) * maradek;
+
+  int Stepsize1 = floor(osztalek);
+  int Stepsize2 = ceil(osztalek);
+  int StepCount1 = oszthato;
+  int StepCount2 = maradek;
+
+
+  while (J1cur < J1stepabs || J2cur < J2stepabs || J3cur < J3stepabs)
+  {
+
+
+    while (StepCount1 > 0)
+    {
+      if (flag==2){
+          rot1Stepper.step(Stepsize1 * J2el);
+          delayMicroseconds(curDelay);
+          rot2Stepper.step(J3el);
+          delayMicroseconds(curDelay);
+          J3cur = J3cur+1;
+          J2cur = J2cur+Stepsize1;
+      }
+      else if (flag == 1){
+          rot1Stepper.step(J2el);
+          delayMicroseconds(curDelay);
+          rot2Stepper.step(Stepsize1 * J3el);
+          delayMicroseconds(curDelay);
+          J2cur = J2cur+1;
+          J3cur = J3cur + Stepsize1;
+      }
+      if (J1cur < J1stepabs)
+      {
+          J1cur = J1cur+1;
+          baseStepper.step(J1el);
+          delayMicroseconds(curDelay);
+      }
+      StepCount1=StepCount1-1;
+    }
+    while (StepCount2 > 0)
+    {
+
+      if (flag == 2){
+          rot1Stepper.step(Stepsize2 * J2el);
+          delayMicroseconds(curDelay);
+          rot2Stepper.step(J3el);
+          delayMicroseconds(curDelay);
+          J3cur = J3cur+1;
+          J2cur = J2cur + Stepsize2;
+      }
+      else if (flag == 1){
+          rot1Stepper.step(J2el);
+          delayMicroseconds(curDelay);
+          rot2Stepper.step(Stepsize2 * J3el);
+          delayMicroseconds(curDelay);
+          J2cur = J2cur+1;
+          J3cur = J3cur + Stepsize2;
+      }
+      if (J1cur < J1stepabs){
+          J1cur = J1cur+1;
+          baseStepper.step(J1el);
+          delayMicroseconds(curDelay);
+      }
+      StepCount2 = StepCount2 - 1;
+    }
+    if (J1cur < J1stepabs)
+    {
+      J1cur = J1cur+1;
+      baseStepper.step(J1el);
+      delayMicroseconds(curDelay);
+    }
+    if (J2cur < J2stepabs)
+    {
+      J2cur = J2cur+1;
+      rot1Stepper.step(J2el);
+      delayMicroseconds(curDelay);
+
+    }
+    if (J3cur < J3stepabs)
+    {
+      J3cur = J3cur+1;
+      rot2Stepper.step(J3el);
+      delayMicroseconds(curDelay);
+
+    }
   }
 }
 
 
 void odavisz(){
   for (int i=0; i<sizeof thd0/sizeof thd0[0]; i++) {
-    stepper2(thd0[i], thd1[i], thd2[i]);
+    stepper1(thd0[i], thd1[i], thd2[i]);
     //Serial.println(thd0[i]);
     //Serial.println(thd1[i]);
     //Serial.println(thd2[i]);
@@ -130,7 +293,7 @@ void odavisz(){
 
 
 void manual(){
-  
+
   char inChar = Serial.read();
   long int inInt = Serial.parseInt();
   Serial.println(inChar);
@@ -159,7 +322,7 @@ void manual(){
     thet1=thet1+inInt/rot1div;
     Serial.println(thet1);
   }
-  
+
   if (inChar=='a') {
     rot1Stepper.step(-inInt);
     thet1=thet1-inInt/rot1div;
@@ -172,7 +335,7 @@ void manual(){
     thet2=thet2+inInt/rot2div;
     Serial.println(thet2);
   }
-  
+
   if (inChar=='j') {
     rot2Stepper.step(-inInt);
     thet2=thet2-inInt/rot2div;
@@ -207,17 +370,17 @@ int indexBuff=0;
 
 void loop() {
 
-  
+
   while (Serial.available() > 0) {
-    
+
     //manual();
 
-  
+
     Serial.setTimeout(10);
     int len = Serial.readBytes(bytes,320);
-    
+
     //uint8_t bytes[] = {56,130,87,0,85,0,83,0,81,0,79,0,78,0,76,0,74,0,73,0,71,0,70,0,68,0,67,0,65,0,64,0,63,0,61,0,60,0,59,0};
-    
+
     switch (indexBuff) {
       case 0:
         //Serial.println("th0");
@@ -235,7 +398,7 @@ void loop() {
           thd0[i/2]=result_0;
         }
         break;
-      
+
       case 2:
         //Serial.println("th1");
         for (int i=0; i<len;i=i+2){
@@ -244,26 +407,25 @@ void loop() {
           thd1[i/2]=result_0;
         }
         break;
-      
+
       case 3:
         //Serial.println("th2");
         for (int i=0; i<len;i=i+2){
           int16_t result_0 = read_int16_t(bytes, i);
           //Serial.println(result_0);
           thd2[i/2]=result_0;
-        }   
+        }
         break;
       default:
-          
+
           indexBuff=0;
         break;
-      
+
     }
 
     if (indexBuff==3){
       odavisz();
     }
-    indexBuff++; 
-  }   
+    indexBuff++;
+  }
 }
-

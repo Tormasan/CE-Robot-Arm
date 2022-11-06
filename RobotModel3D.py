@@ -323,10 +323,11 @@ while True:
     #z = float(input("z: "))
 
     time.sleep(1)
-    #manualL()
+    manualL()
+
     #conMoveL(0,-step, 0)
     #conMoveL(0, step, 0)
-    gcode_read()
+    #gcode_read()
 
     #conMoveL( 0,0,0)
     #print(arduino.readall())
