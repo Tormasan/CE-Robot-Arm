@@ -34,21 +34,22 @@ Stepper rot1Stepper(steps1PerRevolution, 6, 7);
 Stepper rot2Stepper(stepsPerRevolution, 10, 11);
 
 
-void stepper2(int J1step, int J2step, int J3step){
-  int curDelay = 20;
+void calculator(int32_t J1step, int32_t J2step, int32_t J3step)
+{
+  int curDelay = 1;
   int J1cur = 0;
   int J2cur = 0;
   int J3cur = 0;
   int J1el;
   int J2el;
   int J3el;
-  int J1stepabs;
-  int J2stepabs;
-  int J3stepabs;
+  int a;
+  int b;
+  int c;
 
-  J1stepabs=abs(J1step);
-  J2stepabs=abs(J2step);
-  J3stepabs=abs(J3step);
+  a=abs(J1step);
+  b=abs(J2step);
+  c=abs(J3step);
 
 
   if (J1step < 0)
@@ -81,212 +82,56 @@ void stepper2(int J1step, int J2step, int J3step){
     J3el=1;
   }
 
-  ///// DRIVE MOTORS /////
-  while (J1cur < J1stepabs || J2cur < J2stepabs || J3cur < J3stepabs)
-  {
-    int csicska = 10;
+  const int32_t max_step_size = 1;
+  int32_t biggest = a;
+  if (b > biggest)
+    biggest = b;
+  if (c > biggest)
+    biggest = c;
 
-    while (csicska > 0){
-      /////// J2 ////////////////////////////////
-      if (J2cur < J2stepabs)
-      {
-        J2cur = ++J2cur;
-        rot1Stepper.step(J2el);
-        delayMicroseconds(curDelay);
-      }
-      csicska--;
-    }
+  int32_t number_of_steps = ceil(biggest/max_step_size);
 
-    if (J1cur < J1stepabs)
-    {
-      J1cur = ++J1cur;
-      baseStepper.step(J1el);
-      delayMicroseconds(curDelay);
-    }
+  double avg_a = (double)a / (double)number_of_steps;
+  double avg_b = (double)b / (double)number_of_steps;
+  double avg_c = (double)c / (double)number_of_steps;
 
-    if (J3cur < J3stepabs)
-    {
-      J3cur = ++J3cur;
-      rot2Stepper.step(J3el);
-      delayMicroseconds(curDelay);
-    }
+  int32_t a_done = 0;
+  int32_t b_done = 0;
+  int32_t c_done = 0;
 
+  for (int i = 0; i < number_of_steps; ++i) {
+    int32_t curr_a = floor(avg_a*i);
+    curr_a -= a_done;
+    int32_t curr_b = floor(avg_b*i);
+    curr_b -= b_done;
+    int32_t curr_c = floor(avg_c*i);
+    curr_c -= c_done;
 
-  }
-}
+    a -= curr_a;
+    b -= curr_b;
+    c -= curr_c;
 
+    a_done += curr_a;
+    b_done += curr_b;
+    c_done += curr_c;
 
-void stepper1(int J1step, int J2step, int J3step){
-  int curDelay = 50;
-  int J1cur = 0;
-  int J2cur = 0;
-  int J3cur = 0;
-  int J1el;
-  int J2el;
-  int J3el;
-  int J1stepabs;
-  int J2stepabs;
-  int J3stepabs;
-
-  J1stepabs=abs(J1step);
-  J2stepabs=abs(J2step);
-  J3stepabs=abs(J3step);
-
-
-  if (J1step < 0)
-  {
-    J1el=-1;
+    baseStepper.step(curr_a*J1el);
+    delayMicroseconds(curDelay);
+    rot1Stepper.step(curr_b*J2el);
+    delayMicroseconds(curDelay);
+    rot2Stepper.step(curr_c*J3el);
+    delayMicroseconds(curDelay);
 
   }
-  else if (J1step > 0)
-  {
-    J1el=1;
-  }
-
-
-  if (J2step < 0)
-  {
-    J2el=-1;
-  }
-  else if (J2step > 0)
-  {
-    J2el=1;
-  }
-
-
-  if (J3step < 0)
-  {
-    J3el=-1;
-  }
-  else if (J3step > 0)
-  {
-    J3el=1;
-  }
-
-  if (J2stepabs==0)
-      {J2stepabs=1;}
-
-  if (J3stepabs == 0)
-      {J3stepabs = 1;}
-  int flag=0;
-  int szamlalo;
-  int nevezo;
-  float osztalek;
-
-  osztalek= J3stepabs / J2stepabs;
-  if (osztalek>1)
-  {
-    szamlalo = J3stepabs;
-    nevezo = J2stepabs;
-    osztalek=szamlalo/nevezo;
-    flag=1;
-  }
-  else if (osztalek<1)
-  {
-    szamlalo = J2stepabs;
-    nevezo = J3stepabs;
-    osztalek=szamlalo/nevezo;
-    flag=2;
-  }
-
-
-  float maradek = szamlalo - floor(osztalek) * nevezo;
-  float oszthato = nevezo - maradek;
-  //float eredmeny = oszthato * floor(osztalek) + ceil(osztalek) * maradek;
-
-  int Stepsize1 = floor(osztalek);
-  int Stepsize2 = ceil(osztalek);
-  int StepCount1 = oszthato;
-  int StepCount2 = maradek;
-
-
-  while (J1cur < J1stepabs || J2cur < J2stepabs || J3cur < J3stepabs)
-  {
-
-
-    while (StepCount1 > 0)
-    {
-      if (flag==2){
-          rot1Stepper.step(Stepsize1 * J2el);
-          delayMicroseconds(curDelay);
-          rot2Stepper.step(J3el);
-          delayMicroseconds(curDelay);
-          J3cur = J3cur+1;
-          J2cur = J2cur+Stepsize1;
-      }
-      else if (flag == 1){
-          rot1Stepper.step(J2el);
-          delayMicroseconds(curDelay);
-          rot2Stepper.step(Stepsize1 * J3el);
-          delayMicroseconds(curDelay);
-          J2cur = J2cur+1;
-          J3cur = J3cur + Stepsize1;
-      }
-      if (J1cur < J1stepabs)
-      {
-          J1cur = J1cur+1;
-          baseStepper.step(J1el);
-          delayMicroseconds(curDelay);
-      }
-      StepCount1=StepCount1-1;
-    }
-    while (StepCount2 > 0)
-    {
-
-      if (flag == 2){
-          rot1Stepper.step(Stepsize2 * J2el);
-          delayMicroseconds(curDelay);
-          rot2Stepper.step(J3el);
-          delayMicroseconds(curDelay);
-          J3cur = J3cur+1;
-          J2cur = J2cur + Stepsize2;
-      }
-      else if (flag == 1){
-          rot1Stepper.step(J2el);
-          delayMicroseconds(curDelay);
-          rot2Stepper.step(Stepsize2 * J3el);
-          delayMicroseconds(curDelay);
-          J2cur = J2cur+1;
-          J3cur = J3cur + Stepsize2;
-      }
-      if (J1cur < J1stepabs){
-          J1cur = J1cur+1;
-          baseStepper.step(J1el);
-          delayMicroseconds(curDelay);
-      }
-      StepCount2 = StepCount2 - 1;
-    }
-    if (J1cur < J1stepabs)
-    {
-      J1cur = J1cur+1;
-      baseStepper.step(J1el);
-      delayMicroseconds(curDelay);
-    }
-    if (J2cur < J2stepabs)
-    {
-      J2cur = J2cur+1;
-      rot1Stepper.step(J2el);
-      delayMicroseconds(curDelay);
-
-    }
-    if (J3cur < J3stepabs)
-    {
-      J3cur = J3cur+1;
-      rot2Stepper.step(J3el);
-      delayMicroseconds(curDelay);
-
-    }
-  }
-}
-
+};
 
 void odavisz(){
   for (int i=0; i<sizeof thd0/sizeof thd0[0]; i++) {
-    stepper1(thd0[i], thd1[i], thd2[i]);
+    calculator(thd0[i], thd1[i], thd2[i]);
     //Serial.println(thd0[i]);
     //Serial.println(thd1[i]);
     //Serial.println(thd2[i]);
-    //delay(5);
+    delay(5);
   }
   Serial.println("k");
 }
