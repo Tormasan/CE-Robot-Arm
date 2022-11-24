@@ -20,6 +20,10 @@ maxn=2
 thet0=0
 thet1=0
 thet2=0
+thet3=0
+thet4=0
+thet5=0
+
 def test():
     thet0 = float(0)
     thet1 = float(0)
@@ -130,64 +134,120 @@ def test():
     print(result2)
 
 
-def MoveL(xdel, ydel,zdel):
-    r0=0.0
+def MoveL(xdel, ydel, zdel ):
     r1=0.2
-    r2=0.2
+    r2=0.03
+    d0=0.19
+    d3=0.225
+    d5=0.075
 
     x = []
     y = []
     z = []
+
+
+    R0_6=[[0.0,0.0,1.0],
+          [0.0,-1.0,0.0],
+          [1.0,0.0,0.0]]
+
+
+
     thetdel0 = []
     thetdel1 = []
     thetdel2 = []
+    thetdel3 = []
+    thetdel4 = []
+    thetdel5 = []
     rangen=20 # step iteration
     for i in range(rangen):
         global thet0
         global thet1
         global thet2
-        thetdel0.append(
-            clamp((ydel * cos(thet0) - xdel * sin(thet0)) / (r0 + r2 * cos(thet1 + thet2) + r1 * sin(thet1)), minn,
-                  maxn))
+        global thet3
+        global thet4
+        global thet5
 
+        R0_3 = [
+            [sin(thet1 + thet2) * cos(thet0), sin(thet0), cos(thet1 + thet2) * cos(thet0)],
+            [sin(thet1 + thet2) * sin(thet0), -cos(thet0), cos(thet1 + thet2) * sin(thet0)],
+            [cos(thet1 + thet2), 0, -sin(thet1 + thet2)]]
+
+        invR0_3 = np.linalg.inv(R0_3)
+
+        R3_6=np.dot(invR0_3,R0_6)
+
+
+        thetdel0.append(
+            clamp((ydel*cos(thet0) - xdel*sin(thet0))/(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)), minn,
+                  maxn))
 
         thetdel1.append(
             clamp(
-                -(zdel * cos(thet1) * sin(thet2) + zdel * cos(thet2) * sin(thet1) - xdel * cos(thet0) * cos(thet1) * cos(
-                thet2) - ydel * cos(thet1) * cos(thet2) * sin(thet0) + xdel * cos(thet0) * sin(thet1) * sin(
-                thet2) + ydel * sin(thet0) * sin(thet1) * sin(thet2)) / (r1 * cos(thet2)), minn, maxn))
-
-
+                (d3 * xdel * cos(thet0 - thet1 - thet2) + r2 * ydel * cos(thet0 - thet1 - thet2) + d3 * ydel * sin(
+                    thet0 - thet1 - thet2) - r2 * xdel * sin(thet0 - thet1 - thet2) + d3 * xdel * cos(
+                    thet0 + thet1 + thet2) - r2 * ydel * cos(thet0 + thet1 + thet2) + d3 * ydel * sin(
+                    thet0 + thet1 + thet2) + r2 * xdel * sin(thet0 + thet1 + thet2) + 2 * r2 * zdel * cos(
+                    thet1 + thet2) - 2 * d3 * zdel * sin(thet1 + thet2)) / (
+                            2 * r1 * (d3 * cos(thet2) + r2 * sin(thet2)))
+                , minn, maxn))
 
         thetdel2.append(
             clamp(
-                -(r1*zdel*cos(thet1) + r1*xdel*cos(thet0)*sin(thet1) - r2*zdel*cos(thet1)*sin(thet2) -
-                r2*zdel*cos(thet2)*sin(thet1) + r1*ydel*sin(thet0)*sin(thet1) - r2*ydel*sin(thet0)*sin(thet1)*sin(thet2) +
-                r2*xdel*cos(thet0)*cos(thet1)*cos(thet2) + r2*ydel*cos(thet1)*cos(thet2)*sin(thet0) -
-                r2*xdel*cos(thet0)*sin(thet1)*sin(thet2))/(r1*r2*cos(thet2)), minn, maxn))
+                -(r1*zdel*cos(thet1) + r1*xdel*cos(thet0)*sin(thet1) + r1*ydel*sin(thet0)*sin(thet1) -
+                  r2*zdel*sin(thet1)*sin(thet2) + r2*zdel*cos(thet1)*cos(thet2) - d3*zdel*cos(thet1)*sin(thet2) -
+                  d3*zdel*cos(thet2)*sin(thet1) + d3*xdel*cos(thet0)*cos(thet1)*cos(thet2) + d3*ydel*cos(thet1)*cos(thet2)*sin(thet0) +
+                  r2*xdel*cos(thet0)*cos(thet1)*sin(thet2) + r2*xdel*cos(thet0)*cos(thet2)*sin(thet1) -
+                  d3*xdel*cos(thet0)*sin(thet1)*sin(thet2) + r2*ydel*cos(thet1)*sin(thet0)*sin(thet2) +
+                  r2*ydel*cos(thet2)*sin(thet0)*sin(thet1) - d3*ydel*sin(thet0)*sin(thet1)*sin(thet2))/(r1*(d3*cos(thet2) + r2*sin(thet2)))
+                , minn, maxn))
+
+        thetdel4.append(np.arccos(R3_6[2][2]))
+
+        if thetdel4[i]==0 or thetdel4[i]==pi:
+            print("Theta")
+            thetdel5.append(-.0001)
+            thetdel3.append(np.arctan2(R3_6[1][0],R3_6[0][0])-thetdel5[i]) #sin(thet3 + thet5)
+
+        else:
+            thetdel5.append(np.arctan2(R3_6[2][1],-R3_6[2][0]))
+            thetdel3.append(np.arctan2(R3_6[1][2],R3_6[0][2]))
 
         thet0 = thet0 + thetdel0[i]
         thet1 = thet1 + thetdel1[i]
         thet2 = thet2 + thetdel2[i]
+        thet3 = thet3 + thetdel3[i]
+        thet4 = thet4 + thetdel4[i]
+        thet5 = thet5 + thetdel5[i]
 
-        x.append(cos(thet0)*(r0 + r2*cos(thet1 + thet2) + r1*sin(thet1)))
-        y.append(sin(thet0)*(r0 + r2*cos(thet1 + thet2) + r1*sin(thet1)))
-        z.append(r1*cos(thet1) - r2*sin(thet1 + thet2) + 19/100)
+        print(thet0*57,thet1*57,thet2*57,thet3*57,thet4*57,thet5*57)
+        x.append(cos(thet0)*(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)))
+        y.append(sin(thet0)*(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)))
+        z.append(d0 + r2*cos(thet1 + thet2) - d3*sin(thet1 + thet2) + r1*cos(thet1))
 
     my_list0 = thetdel0
     my_list1 = thetdel1
     my_list2 = thetdel2
+    my_list3 = thetdel3
+    my_list4 = thetdel4
+    my_list5 = thetdel5
     thetresult0 = [round(item * 142 * 57.2958) for item in my_list0]
     thetresult1 = [round(item * 944 * 57.2958) for item in my_list1]
     thetresult2 = [round(item * 144 * 57.2958) for item in my_list2]
+    thetresult3 = [round(item * 32 * 57.2958/20) for item in my_list3]
+    thetresult4 = [round(item * 11 * 57.2958/20) for item in my_list4]
+    thetresult5 = [round(item * 10 * 57.2958/20) for item in my_list5]
+    #ki kell egészíteni a diferencia kivonásával
     print(thetresult0)
     print(thetresult1)
     print(thetresult2)
+    print(thetresult3)
+    print(thetresult4)
+    print(thetresult5)
 
-    #ploting(x,y,z)
+    ploting(x,y,z)
 
 
-    return thetresult0, thetresult1, thetresult2
+    return thetresult0, thetresult1, thetresult2, thetresult3, thetresult4, thetresult5
 
 
 def ploting(x,y,z):
@@ -227,14 +287,18 @@ def convert_to_bytes(input_array:List[np.int16]):
 
 def conMoveL(x,y,z):
 
-    buffthd0, buffthd1,buffthd2 = MoveL(x,y,z)
-    write_read(buffthd0, buffthd1, buffthd2)
+    buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5 = MoveL(x,y,z)
+    arrayzero = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    arraypos =[100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
+    arrayneg = [-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100]
+    #write_read(buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5)
+    write_read(arrayneg,arrayzero,arrayzero,arrayneg,arrayzero,arrayzero)
     while arduino.read()!=b'k':  #acknowladge
         time.sleep(dela)
 
 #def posMoveL(xpos, ypos, zpos):
 
-def write_read(buff_0, buff_1, buff_2):
+def write_read(buff_0, buff_1, buff_2, buff_3, buff_4, buff_5):
     arduino.write(convert_to_bytes(buff_0))
     time.sleep(.05)
     arduino.write(convert_to_bytes(buff_0))
@@ -243,7 +307,13 @@ def write_read(buff_0, buff_1, buff_2):
     time.sleep(.05)
     arduino.write(convert_to_bytes(buff_2))
     time.sleep(.05)
-
+    arduino.write(convert_to_bytes(buff_3))
+    time.sleep(.05)
+    arduino.write(convert_to_bytes(buff_4))
+    time.sleep(.05)
+    arduino.write(convert_to_bytes(buff_5))
+    time.sleep(.05)
+    print(arduino.readall())
 
 nex=200.0 #start pos x
 ney=30.0
@@ -306,12 +376,6 @@ def manualL():
         if keyboard.read_key() == "a":
            conMoveL(-step,0,0)
            break
-
-
-
-
-
-
 
 
 step=0.004
