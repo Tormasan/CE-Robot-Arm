@@ -1,4 +1,3 @@
-
 #include <Stepper.h>
 #include <assert.h>
 
@@ -45,7 +44,7 @@ Stepper J4Stepper(stepsPerRevolution, J4stepPin, J4dirPin);
 Stepper J5Stepper(stepsPerRevolution, J5stepPin, J5dirPin);
 Stepper J6Stepper(stepsPerRevolution, J6stepPin, J6dirPin);
 
-void calculator(int32_t J1step, int32_t J2step, int32_t J3step, int32_t J4step, int32_t J5step, int32_t J6step)
+void calculator(int16_t J1step, int16_t J2step, int16_t J3step, int16_t J4step, int16_t J5step, int16_t J6step)
 {
   int curDelay = 1;
   int J1cur = 0;
@@ -54,25 +53,27 @@ void calculator(int32_t J1step, int32_t J2step, int32_t J3step, int32_t J4step, 
   int J4cur = 0;
   int J5cur = 0;
   int J6cur = 0;
+
   int J1el;
   int J2el;
   int J3el;
   int J4el;
   int J5el;
   int J6el;
-  int a;
-  int b;
-  int c;
-  int d;
-  int e;
-  int f;
 
-  a=abs(J1step);
-  b=abs(J2step);
-  c=abs(J3step);
-  a=abs(J4step);
-  b=abs(J5step);
-  c=abs(J6step);
+  int J1abs;
+  int J2abs;
+  int J3abs;
+  int J4abs;
+  int J5abs;
+  int J6abs;
+
+  J1abs=abs(J1step);
+  J2abs=abs(J2step);
+  J3abs=abs(J3step);
+  J4abs=abs(J4step);
+  J5abs=abs(J5step);
+  J6abs=abs(J6step);
 
 
   if (J1step < 0)
@@ -137,73 +138,73 @@ void calculator(int32_t J1step, int32_t J2step, int32_t J3step, int32_t J4step, 
   }
 
   const int32_t max_step_size = 1;
-  int32_t biggest = a;
-  if (b > biggest)
-    biggest = b;
-  if (c > biggest)
-    biggest = c;
-  if (d > biggest)
-    biggest = d;
-  if (e > biggest)
-    biggest = e;
-  if (f > biggest)
-    biggest = f;
+  int32_t biggest = J1abs;
+  if (J2abs > biggest)
+    biggest = J2abs;
+  if (J3abs > biggest)
+    biggest = J3abs;
+  if (J4abs > biggest)
+    biggest = J4abs;
+  if (J5abs > biggest)
+    biggest = J5abs;
+  if (J6abs > biggest)
+    biggest = J6abs;
 
   int32_t number_of_steps = ceil(biggest/max_step_size);
 
-  double avg_a = (double)a / (double)number_of_steps;
-  double avg_b = (double)b / (double)number_of_steps;
-  double avg_c = (double)c / (double)number_of_steps;
-  double avg_d = (double)d / (double)number_of_steps;
-  double avg_e = (double)e / (double)number_of_steps;
-  double avg_f = (double)f / (double)number_of_steps;
+  double avg_J1 = (double)J1abs / (double)number_of_steps;
+  double avg_J2 = (double)J2abs / (double)number_of_steps;
+  double avg_J3 = (double)J3abs / (double)number_of_steps;
+  double avg_J4 = (double)J4abs / (double)number_of_steps;
+  double avg_J5 = (double)J5abs / (double)number_of_steps;
+  double avg_J6 = (double)J6abs / (double)number_of_steps;
 
-  int32_t a_done = 0;
-  int32_t b_done = 0;
-  int32_t c_done = 0;
-  int32_t d_done = 0;
-  int32_t e_done = 0;
-  int32_t f_done = 0;
+  int32_t J1_done = 0;
+  int32_t J2_done = 0;
+  int32_t J3_done = 0;
+  int32_t J4_done = 0;
+  int32_t J5_done = 0;
+  int32_t J6_done = 0;
 
   for (int i = 0; i < number_of_steps; ++i) {
-    int32_t curr_a = floor(avg_a*i);
-    curr_a -= a_done;
-    int32_t curr_b = floor(avg_b*i);
-    curr_b -= b_done;
-    int32_t curr_c = floor(avg_c*i);
-    curr_c -= c_done;
-    int32_t curr_d = floor(avg_d*i);
-    curr_d -= d_done;
-    int32_t curr_e = floor(avg_e*i);
-    curr_e -= e_done;
-    int32_t curr_f = floor(avg_f*i);
-    curr_f -= f_done;
+    int32_t curr_J1 = floor(avg_J1*i);
+    curr_J1 -= J1_done;
+    int32_t curr_J2 = floor(avg_J2*i);
+    curr_J2 -= J2_done;
+    int32_t curr_J3 = floor(avg_J3*i);
+    curr_J3 -= J3_done;
+    int32_t curr_J4 = floor(avg_J4*i);
+    curr_J4 -= J4_done;
+    int32_t curr_J5 = floor(avg_J5*i);
+    curr_J5 -= J5_done;
+    int32_t curr_J6 = floor(avg_J6*i);
+    curr_J6 -= J6_done;
 
-    a -= curr_a;
-    b -= curr_b;
-    c -= curr_c;
-    d -= curr_d;
-    e -= curr_e;
-    f -= curr_f;
+    J1abs -= curr_J1;
+    J2abs -= curr_J2;
+    J3abs -= curr_J3;
+    J4abs -= curr_J4;
+    J5abs -= curr_J5;
+    J6abs -= curr_J6;
 
-    a_done += curr_a;
-    b_done += curr_b;
-    c_done += curr_c;
-    d_done += curr_d;
-    e_done += curr_e;
-    f_done += curr_f;
+    J1_done += curr_J1;
+    J2_done += curr_J2;
+    J3_done += curr_J3;
+    J4_done += curr_J4;
+    J5_done += curr_J5;
+    J6_done += curr_J6;
 
-    baseStepper.step(curr_a*J1el);
+    baseStepper.step(curr_J1*J1el);
     delayMicroseconds(curDelay);
-    rot1Stepper.step(curr_b*J2el);
+    rot1Stepper.step(curr_J2*J2el);
     delayMicroseconds(curDelay);
-    rot2Stepper.step(curr_c*J3el);
+    rot2Stepper.step(curr_J3*J3el);
     delayMicroseconds(curDelay);
-    J4Stepper.step(curr_d*J4el);
+    J4Stepper.step(curr_J4*J4el);
     delayMicroseconds(curDelay);
-    J5Stepper.step(curr_f*J5el);
+    J5Stepper.step(curr_J5*J5el);
     delayMicroseconds(curDelay);
-    J6Stepper.step(curr_e*J6el);
+    J6Stepper.step(curr_J6*J6el);
     delayMicroseconds(curDelay);
 
   }
@@ -298,10 +299,11 @@ void setup() {
 
 uint8_t bytes[520];
 int indexBuff=0;
-
+int arrayzero[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int arraypos[20] ={100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+int arrayneg[20] = {-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100};
 
 void loop() {
-
 
   while (Serial.available() > 0) {
 
@@ -313,66 +315,71 @@ void loop() {
 
     //int len[] = {56,130,87,0,85,0,83,0,81,0,79,0,78,0,76,0,74,0,73,0,71,0,70,0,68,0,67,0,65,0,64,0,63,0,61,0,60,0,59,0};
 
+
     switch (indexBuff) {
       case 0:
-        Serial.println("th0");
+
         for (int i=0; i<len;i=i+2){
           int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
+          //Serial.println(result_0);
           thd0[i/2]=result_0;
         }
         break;
+
       case 1:
-        //Serial.println("th0");
+
         for (int i=0; i<len;i=i+2){
           int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
+          //Serial.println(result_0);
           thd0[i/2]=result_0;
         }
+        //Serial.println("th0");
         break;
 
       case 2:
-        Serial.println("th1");
+
         for (int i=0; i<len;i=i+2){
-          int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
-          thd1[i/2]=result_0;
+          int16_t result_1 = read_int16_t(bytes, i);
+          //Serial.println(result_1);
+          thd1[i/2]=result_1;
         }
+        //Serial.println("th1");
         break;
 
       case 3:
-        Serial.println("th2");
+
         for (int i=0; i<len;i=i+2){
-          int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
-          thd2[i/2]=result_0;
+          int16_t result_2 = read_int16_t(bytes, i);
+          //Serial.println(result_2);
+          thd2[i/2]=result_2;
         }
+        //Serial.println("th2");
         break;
 
       case 4:
-        Serial.println("th3");
+        //Serial.println("th3");
         for (int i=0; i<len;i=i+2){
-          int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
-          thd3[i/2]=result_0;
+          int16_t result_3 = read_int16_t(bytes, i);
+          //Serial.println(result_3);
+          thd3[i/2]=result_3;
         }
         break;
 
       case 5:
-        Serial.println("th4");
+        //Serial.println("th4");
         for (int i=0; i<len;i=i+2){
-          int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
-          thd4[i/2]=result_0;
+          int16_t result_4 = read_int16_t(bytes, i);
+          //Serial.println(result_4);
+          thd4[i/2]=result_4;
         }
         break;
 
       case 6:
-        Serial.println("th5");
+        //Serial.println("th5");
         for (int i=0; i<len;i=i+2){
-          int16_t result_0 = read_int16_t(bytes, i);
-          Serial.println(result_0);
-          thd5[i/2]=result_0;
+          int16_t result_5 = read_int16_t(bytes, i);
+          //Serial.println(result_5);
+          thd5[i/2]=result_5;
         }
         break;
 
@@ -389,4 +396,6 @@ void loop() {
     }
     indexBuff++;
   }
+
+
 }

@@ -292,7 +292,7 @@ def conMoveL(x,y,z):
     arraypos =[100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
     arrayneg = [-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100]
     #write_read(buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5)
-    write_read(arrayneg,arrayzero,arrayzero,arrayneg,arrayzero,arrayzero)
+    write_read(arrayzero,arrayzero,arrayzero,arrayzero,arrayzero,arraypos)
     while arduino.read()!=b'k':  #acknowladge
         time.sleep(dela)
 
@@ -300,19 +300,19 @@ def conMoveL(x,y,z):
 
 def write_read(buff_0, buff_1, buff_2, buff_3, buff_4, buff_5):
     arduino.write(convert_to_bytes(buff_0))
-    time.sleep(.05)
+    time.sleep(.2)
     arduino.write(convert_to_bytes(buff_0))
-    time.sleep(.05)
+    time.sleep(.2)
     arduino.write(convert_to_bytes(buff_1))
-    time.sleep(.05)
+    time.sleep(.2)
     arduino.write(convert_to_bytes(buff_2))
-    time.sleep(.05)
+    time.sleep(.2)
     arduino.write(convert_to_bytes(buff_3))
-    time.sleep(.05)
+    time.sleep(.2)
     arduino.write(convert_to_bytes(buff_4))
-    time.sleep(.05)
+    time.sleep(.2)
     arduino.write(convert_to_bytes(buff_5))
-    time.sleep(.05)
+    time.sleep(.2)
     print(arduino.readall())
 
 nex=200.0 #start pos x
