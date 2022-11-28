@@ -140,6 +140,9 @@ def MoveL(xdel, ydel, zdel ):
     d0=0.19
     d3=0.225
     d5=0.075
+    rolldel=0.0
+    pitchdel=0.0
+    yawdel=0.0
 
     x = []
     y = []
@@ -176,6 +179,11 @@ def MoveL(xdel, ydel, zdel ):
 
         R3_6=np.dot(invR0_3,R0_6)
 
+        rolldel= (1 - (R3_6[0][0] + R3_6[0][1] + R3_6[0][2]))
+        pitchdel = (1 - (R3_6[1][0] + R3_6[1][1] + R3_6[1][2]))
+        yawdel = (1 - (R3_6[2][0] + R3_6[2][1] + R3_6[2][2]))
+        print(rolldel, pitchdel, yawdel)
+
 
         thetdel0.append(
             clamp((ydel*cos(thet0) - xdel*sin(thet0))/(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)), minn,
@@ -201,16 +209,28 @@ def MoveL(xdel, ydel, zdel ):
                   r2*ydel*cos(thet2)*sin(thet0)*sin(thet1) - d3*ydel*sin(thet0)*sin(thet1)*sin(thet2))/(r1*(d3*cos(thet2) + r2*sin(thet2)))
                 , minn, maxn))
 
-        thetdel4.append(np.arccos(R3_6[2][2]))
+        thetdel3.append(clamp((rolldel*sin(thet0)*sin(thet3)*sin(thet4) - yawdel*cos(thet2)*cos(thet4)*sin(thet1) - pitchdel*cos(thet0)*sin(thet3)*sin(thet4) -
+                               yawdel*cos(thet1)*cos(thet4)*sin(thet2) + rolldel*cos(thet0)*cos(thet1)*cos(thet2)*cos(thet4) +
+                               pitchdel*cos(thet1)*cos(thet2)*cos(thet4)*sin(thet0) + yawdel*cos(thet1)*cos(thet2)*cos(thet3)*sin(thet4) -
+                               rolldel*cos(thet0)*cos(thet4)*sin(thet1)*sin(thet2) - pitchdel*cos(thet4)*sin(thet0)*sin(thet1)*sin(thet2) -
+                               yawdel*cos(thet3)*sin(thet1)*sin(thet2)*sin(thet4) + rolldel*cos(thet0)*cos(thet1)*cos(thet3)*sin(thet2)*sin(thet4) +
+                               rolldel*cos(thet0)*cos(thet2)*cos(thet3)*sin(thet1)*sin(thet4) + pitchdel*cos(thet1)*cos(thet3)*sin(thet0)*sin(thet2)*sin(thet4) +
+                               pitchdel*cos(thet2)*cos(thet3)*sin(thet0)*sin(thet1)*sin(thet4))/cos(thet4), minn, maxn))
+
+
+        thetdel4.append(clamp(rolldel*cos(thet3)*sin(thet0) - pitchdel*cos(thet0)*cos(thet3) - yawdel*cos(thet1)*cos(thet2)*sin(thet3) +
+                              yawdel*sin(thet1)*sin(thet2)*sin(thet3) - rolldel*cos(thet0)*cos(thet1)*sin(thet2)*sin(thet3) -
+                              rolldel*cos(thet0)*cos(thet2)*sin(thet1)*sin(thet3) - pitchdel*cos(thet1)*sin(thet0)*sin(thet2)*sin(thet3) -
+                              pitchdel*cos(thet2)*sin(thet0)*sin(thet1)*sin(thet3),minn, maxn))
 
         if thetdel4[i]==0 or thetdel4[i]==pi:
             print("Theta")
-            thetdel5.append(-.0001)
-            thetdel3.append(np.arctan2(R3_6[1][0],R3_6[0][0])-thetdel5[i]) #sin(thet3 + thet5)
+        thetdel5.append(clamp((rolldel*sin(thet0)*sin(thet3) - pitchdel*cos(thet0)*sin(thet3) + yawdel*cos(thet1)*cos(thet2)*cos(thet3) -
+                               yawdel*cos(thet3)*sin(thet1)*sin(thet2) + rolldel*cos(thet0)*cos(thet1)*cos(thet3)*sin(thet2) +
+                               rolldel*cos(thet0)*cos(thet2)*cos(thet3)*sin(thet1) + pitchdel*cos(thet1)*cos(thet3)*sin(thet0)*sin(thet2) +
+                               pitchdel*cos(thet2)*cos(thet3)*sin(thet0)*sin(thet1))/cos(thet4),minn,maxn))
 
-        else:
-            thetdel5.append(np.arctan2(R3_6[2][1],-R3_6[2][0]))
-            thetdel3.append(np.arctan2(R3_6[1][2],R3_6[0][2]))
+
 
         thet0 = thet0 + thetdel0[i]
         thet1 = thet1 + thetdel1[i]
@@ -219,7 +239,7 @@ def MoveL(xdel, ydel, zdel ):
         thet4 = thet4 + thetdel4[i]
         thet5 = thet5 + thetdel5[i]
 
-        print(thet0*57,thet1*57,thet2*57,thet3*57,thet4*57,thet5*57)
+        #print(thet0*57,thet1*57,thet2*57,thet3*57,thet4*57,thet5*57)
         x.append(cos(thet0)*(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)))
         y.append(sin(thet0)*(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)))
         z.append(d0 + r2*cos(thet1 + thet2) - d3*sin(thet1 + thet2) + r1*cos(thet1))
@@ -230,12 +250,12 @@ def MoveL(xdel, ydel, zdel ):
     my_list3 = thetdel3
     my_list4 = thetdel4
     my_list5 = thetdel5
-    thetresult0 = [round(item * 142 * 57.2958) for item in my_list0]
-    thetresult1 = [round(item * 944 * 57.2958) for item in my_list1]
-    thetresult2 = [round(item * 144 * 57.2958) for item in my_list2]
-    thetresult3 = [round(item * 32 * 57.2958/20) for item in my_list3]
-    thetresult4 = [round(item * 11 * 57.2958/20) for item in my_list4]
-    thetresult5 = [round(item * 10 * 57.2958/20) for item in my_list5]
+    thetresult0 = [round(item1 * 142 * 57.2958) for item1 in my_list0]
+    thetresult1 = [round(item2 * 944 * 57.2958) for item2 in my_list1]
+    thetresult2 = [round(item3 * 144 * 57.2958) for item3 in my_list2]
+    thetresult3 = [round(item4 * 32 * 57.2958) for item4 in my_list3]
+    thetresult4 = [round(item5 * 11 * 57.2958) for item5 in my_list4]
+    thetresult5 = [round(item6 * 10 * 57.2958) for item6 in my_list5]
     #ki kell egészíteni a diferencia kivonásával
     print(thetresult0)
     print(thetresult1)
@@ -290,9 +310,10 @@ def conMoveL(x,y,z):
     buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5 = MoveL(x,y,z)
     arrayzero = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     arraypos =[100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
+    array3 = [35, 35, 35, 35, 35, 35, 35, 35, 35, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33]
     arrayneg = [-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100]
-    #write_read(buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5)
-    write_read(arrayzero,arrayzero,arrayzero,arrayzero,arrayzero,arraypos)
+    write_read(buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5)
+    #write_read(arrayzero,arrayzero,arrayzero,arraypos,array3,arrayzero)
     while arduino.read()!=b'k':  #acknowladge
         time.sleep(dela)
 
@@ -376,6 +397,10 @@ def manualL():
         if keyboard.read_key() == "a":
            conMoveL(-step,0,0)
            break
+        if keyboard.read_key() == "n":
+           conMoveL(0,0,0)
+           break
+
 
 
 step=0.004
