@@ -7,6 +7,10 @@ import serial
 import time
 from typing import List
 import re
+import ikpy.chain
+import math
+import ikpy.utils.plot as plot_utils
+
 
 from gcodeparser import GcodeParser
 
@@ -14,15 +18,15 @@ from gcodeparser import GcodeParser
 import keyboard
 
 
-arduino = serial.Serial(port='COM6', baudrate=115200, timeout=.1)
+#arduino = serial.Serial(port='COM6', baudrate=115200, timeout=.1)
 minn=-2
 maxn=2
-thet0=0
-thet1=0
-thet2=0
-thet3=0
-thet4=0
-thet5=0
+thet0=0.00001
+thet1=0.00001
+thet2=0.00001
+thet3=0.00001
+thet4=0.00001
+thet5=0.00001
 
 def test():
     thet0 = float(0)
@@ -134,26 +138,115 @@ def test():
     print(result2)
 
 
-def MoveL(xdel, ydel, zdel ):
+
+def MoveJ(xpos, ypos, zpos ,xrot=0, yrot=0, zrot=0):
+
+    stepc=20
+    my_chain = ikpy.chain.Chain.from_urdf_file("robot.urdf",active_links_mask=[False, True, True, True, True, True, True])
+
+    target_position = [xpos, ypos, zpos]
+    target_orientation = [xrot, yrot, zrot]
+
+    ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="all")
+    iklist =ik.tolist()
+    iklist[5]=iklist[5]+iklist[4]/2.95
+
+    print(iklist[0])
+    thetresult0 = [round(iklist[1]* 142 * 57.2958 / stepc) for x in range(stepc)]
+    thetresult1 = [round(iklist[2] * 944 * 57.2958 / stepc) for th1 in range(stepc)]
+    thetresult2 = [round(iklist[3] * 144 * 57.2958 / stepc) for th2 in range(stepc) ]
+    thetresult3 = [round(iklist[4] * 32 * 57.2958 / stepc) for th3 in range(stepc)]
+    thetresult4 = [round(iklist[5] * 11 * 57.2958 / stepc) for th4 in range(stepc)]
+    thetresult5 = [round(iklist[6] * 10 * 57.2958 / stepc) for th5 in range(stepc)]
+
+    return thetresult0, thetresult1, thetresult2, thetresult3, thetresult4, thetresult5
+
+#print("The angles of each joints are : ", list(map(lambda r: math.degrees(r), ik.tolist())))
+#kutyaaa=ik.tolist()[1]
+#print(kutyaaa)
+#computed_position = my_chain.forward_kinematics(ik)
+#print("Computed position: %s, original position : %s" % (computed_position[:3, 3], target_position))
+#print("Computed position (readable) : %s" % ['%.2f' % elem for elem in computed_position[:3, 3]])
+print(MoveJ(3,0,4.2,1))
+
+def doIK():
+    global ik
+    old_position = ik.copy()
+    ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="Z",
+                                     initial_position=old_position)
+
+
+def updatePlot():
+    ax.clear()
+    my_chain.plot(ik, ax, target=target_position)
+    plt.xlim(-0.5, 0.5)
+    plt.ylim(-0.5, 0.5)
+    ax.set_zlim(0, 0.6)
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+
+def move(x, y, z):
+    global target_position
+    target_position = [x, y, z]
+    doIK()
+    updatePlot()
+
+
+#import matplotlib.pyplot as plt
+#fig, ax = plot_utils.init_3d_figure()
+#fig.set_figheight(9)
+#fig.set_figwidth(13)
+#my_chain.plot(ik, ax, target=target_position)
+#plt.xlim(-0.5, 0.5)
+#plt.ylim(-0.5, 0.5)
+#ax.set_zlim(0, 0.6)
+#plt.ion()
+
+#move(3, 0, 4.2)
+
+
+def MoveL(xdel, ydel, zdel):
     r1=0.2
     r2=0.03
     d0=0.19
     d3=0.225
     d5=0.075
-    rolldel=0.0
+
+    degrad=57.2958
+
+    thet0_max = 120 / degrad
+    thet0_min = -120 / degrad
+    thet1_max= 75/degrad
+    thet1_min= -75/degrad
+    thet2_max= 85/degrad
+    thet2_min= -45/degrad
+    thet3_max= 360/degrad
+    thet3_min= -360/degrad
+    thet4_max = 120 / degrad
+    thet4_min = -120 / degrad
+    thet5_max = 360 / degrad
+    thet5_min = -360 / degrad
+
+    rolldel=-0.0
     pitchdel=0.0
     yawdel=0.0
+
+    global thet0
+    global thet1
+    global thet2
+    global thet3
+    global thet4
+    global thet5
+
+    #xdel = xdel - d5 * cos(thet3)*sin(thet4)
+    #ydel = ydel - d5 * sin(thet3)*sin(thet4)
+    #zdel = zdel - d5 * cos(thet4)
+
 
     x = []
     y = []
     z = []
-
-
-    R0_6=[[0.0,0.0,1.0],
-          [0.0,-1.0,0.0],
-          [1.0,0.0,0.0]]
-
-
 
     thetdel0 = []
     thetdel1 = []
@@ -163,99 +256,77 @@ def MoveL(xdel, ydel, zdel ):
     thetdel5 = []
     rangen=20 # step iteration
     for i in range(rangen):
-        global thet0
-        global thet1
-        global thet2
-        global thet3
-        global thet4
-        global thet5
-
-        R0_3 = [
-            [sin(thet1 + thet2) * cos(thet0), sin(thet0), cos(thet1 + thet2) * cos(thet0)],
-            [sin(thet1 + thet2) * sin(thet0), -cos(thet0), cos(thet1 + thet2) * sin(thet0)],
-            [cos(thet1 + thet2), 0, -sin(thet1 + thet2)]]
-
-        invR0_3 = np.linalg.inv(R0_3)
-
-        R3_6=np.dot(invR0_3,R0_6)
-
-        rolldel= (1 - (R3_6[0][0] + R3_6[0][1] + R3_6[0][2]))
-        pitchdel = (1 - (R3_6[1][0] + R3_6[1][1] + R3_6[1][2]))
-        yawdel = (1 - (R3_6[2][0] + R3_6[2][1] + R3_6[2][2]))
-        print(rolldel, pitchdel, yawdel)
-
+        #global thet0
+        #global thet1
+        #global thet2
+        #global thet3
+        #global thet4
+        #global thet5
 
         thetdel0.append(
-            clamp((ydel*cos(thet0) - xdel*sin(thet0))/(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)), minn,
-                  maxn))
+            clamp((ydel*cos(thet0) - xdel*sin(thet0))/(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)), minn,maxn))
 
         thetdel1.append(
-            clamp(
-                (d3 * xdel * cos(thet0 - thet1 - thet2) + r2 * ydel * cos(thet0 - thet1 - thet2) + d3 * ydel * sin(
-                    thet0 - thet1 - thet2) - r2 * xdel * sin(thet0 - thet1 - thet2) + d3 * xdel * cos(
-                    thet0 + thet1 + thet2) - r2 * ydel * cos(thet0 + thet1 + thet2) + d3 * ydel * sin(
-                    thet0 + thet1 + thet2) + r2 * xdel * sin(thet0 + thet1 + thet2) + 2 * r2 * zdel * cos(
-                    thet1 + thet2) - 2 * d3 * zdel * sin(thet1 + thet2)) / (
-                            2 * r1 * (d3 * cos(thet2) + r2 * sin(thet2)))
-                , minn, maxn))
+            clamp((d3*xdel*cos(thet0 - thet1 - thet2) + r2*ydel*cos(thet0 - thet1 - thet2) + d3*ydel*sin(thet0 - thet1 - thet2) - r2*xdel*sin(thet0 - thet1 - thet2) + d3*xdel*cos(thet0 + thet1 + thet2) - r2*ydel*cos(thet0 + thet1 + thet2) + d3*ydel*sin(thet0 + thet1 + thet2) + r2*xdel*sin(thet0 + thet1 + thet2) + 2*r2*zdel*cos(thet1 + thet2) - 2*d3*zdel*sin(thet1 + thet2))/(2*r1*(d3*cos(thet2) + r2*sin(thet2))), minn, maxn))
 
         thetdel2.append(
-            clamp(
-                -(r1*zdel*cos(thet1) + r1*xdel*cos(thet0)*sin(thet1) + r1*ydel*sin(thet0)*sin(thet1) -
-                  r2*zdel*sin(thet1)*sin(thet2) + r2*zdel*cos(thet1)*cos(thet2) - d3*zdel*cos(thet1)*sin(thet2) -
-                  d3*zdel*cos(thet2)*sin(thet1) + d3*xdel*cos(thet0)*cos(thet1)*cos(thet2) + d3*ydel*cos(thet1)*cos(thet2)*sin(thet0) +
-                  r2*xdel*cos(thet0)*cos(thet1)*sin(thet2) + r2*xdel*cos(thet0)*cos(thet2)*sin(thet1) -
-                  d3*xdel*cos(thet0)*sin(thet1)*sin(thet2) + r2*ydel*cos(thet1)*sin(thet0)*sin(thet2) +
-                  r2*ydel*cos(thet2)*sin(thet0)*sin(thet1) - d3*ydel*sin(thet0)*sin(thet1)*sin(thet2))/(r1*(d3*cos(thet2) + r2*sin(thet2)))
-                , minn, maxn))
-
-        thetdel3.append(clamp((rolldel*sin(thet0)*sin(thet3)*sin(thet4) - yawdel*cos(thet2)*cos(thet4)*sin(thet1) - pitchdel*cos(thet0)*sin(thet3)*sin(thet4) -
-                               yawdel*cos(thet1)*cos(thet4)*sin(thet2) + rolldel*cos(thet0)*cos(thet1)*cos(thet2)*cos(thet4) +
-                               pitchdel*cos(thet1)*cos(thet2)*cos(thet4)*sin(thet0) + yawdel*cos(thet1)*cos(thet2)*cos(thet3)*sin(thet4) -
-                               rolldel*cos(thet0)*cos(thet4)*sin(thet1)*sin(thet2) - pitchdel*cos(thet4)*sin(thet0)*sin(thet1)*sin(thet2) -
-                               yawdel*cos(thet3)*sin(thet1)*sin(thet2)*sin(thet4) + rolldel*cos(thet0)*cos(thet1)*cos(thet3)*sin(thet2)*sin(thet4) +
-                               rolldel*cos(thet0)*cos(thet2)*cos(thet3)*sin(thet1)*sin(thet4) + pitchdel*cos(thet1)*cos(thet3)*sin(thet0)*sin(thet2)*sin(thet4) +
-                               pitchdel*cos(thet2)*cos(thet3)*sin(thet0)*sin(thet1)*sin(thet4))/cos(thet4), minn, maxn))
+            clamp(-(r1*zdel*cos(thet1) + r1*xdel*cos(thet0)*sin(thet1) + r1*ydel*sin(thet0)*sin(thet1) - r2*zdel*sin(thet1)*sin(thet2) + r2*zdel*cos(thet1)*cos(thet2) - d3*zdel*cos(thet1)*sin(thet2) - d3*zdel*cos(thet2)*sin(thet1) + d3*xdel*cos(thet0)*cos(thet1)*cos(thet2) + d3*ydel*cos(thet1)*cos(thet2)*sin(thet0) + r2*xdel*cos(thet0)*cos(thet1)*sin(thet2) + r2*xdel*cos(thet0)*cos(thet2)*sin(thet1) - d3*xdel*cos(thet0)*sin(thet1)*sin(thet2) + r2*ydel*cos(thet1)*sin(thet0)*sin(thet2) + r2*ydel*cos(thet2)*sin(thet0)*sin(thet1) - d3*ydel*sin(thet0)*sin(thet1)*sin(thet2))/(r1*(d3*cos(thet2) + r2*sin(thet2))), minn, maxn))
 
 
-        thetdel4.append(clamp(rolldel*cos(thet3)*sin(thet0) - pitchdel*cos(thet0)*cos(thet3) - yawdel*cos(thet1)*cos(thet2)*sin(thet3) +
-                              yawdel*sin(thet1)*sin(thet2)*sin(thet3) - rolldel*cos(thet0)*cos(thet1)*sin(thet2)*sin(thet3) -
-                              rolldel*cos(thet0)*cos(thet2)*sin(thet1)*sin(thet3) - pitchdel*cos(thet1)*sin(thet0)*sin(thet2)*sin(thet3) -
-                              pitchdel*cos(thet2)*sin(thet0)*sin(thet1)*sin(thet3),minn, maxn))
-
-        if thetdel4[i]==0 or thetdel4[i]==pi:
-            print("Theta")
-        thetdel5.append(clamp((rolldel*sin(thet0)*sin(thet3) - pitchdel*cos(thet0)*sin(thet3) + yawdel*cos(thet1)*cos(thet2)*cos(thet3) -
-                               yawdel*cos(thet3)*sin(thet1)*sin(thet2) + rolldel*cos(thet0)*cos(thet1)*cos(thet3)*sin(thet2) +
-                               rolldel*cos(thet0)*cos(thet2)*cos(thet3)*sin(thet1) + pitchdel*cos(thet1)*cos(thet3)*sin(thet0)*sin(thet2) +
-                               pitchdel*cos(thet2)*cos(thet3)*sin(thet0)*sin(thet1))/cos(thet4),minn,maxn))
-
-
-
+        #if thet0_min >= thet0 and thet0 <= thet0_max:
         thet0 = thet0 + thetdel0[i]
+        #if thet1_min >= thet1 and thet1 <= thet1_max:
         thet1 = thet1 + thetdel1[i]
+        #if thet2_min >= thet2 and thet2 <= thet2_max:
         thet2 = thet2 + thetdel2[i]
-        thet3 = thet3 + thetdel3[i]
-        thet4 = thet4 + thetdel4[i]
-        thet5 = thet5 + thetdel5[i]
+        #if thet3_min >= thet3 and thet3 <= thet3_max:
 
-        #print(thet0*57,thet1*57,thet2*57,thet3*57,thet4*57,thet5*57)
+
+        print(thet0*57,thet1*57,thet2*57)
         x.append(cos(thet0)*(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)))
         y.append(sin(thet0)*(d3*cos(thet1 + thet2) + r2*sin(thet1 + thet2) + r1*sin(thet1)))
         z.append(d0 + r2*cos(thet1 + thet2) - d3*sin(thet1 + thet2) + r1*cos(thet1))
 
-    my_list0 = thetdel0
-    my_list1 = thetdel1
-    my_list2 = thetdel2
-    my_list3 = thetdel3
-    my_list4 = thetdel4
-    my_list5 = thetdel5
-    thetresult0 = [round(item1 * 142 * 57.2958) for item1 in my_list0]
-    thetresult1 = [round(item2 * 944 * 57.2958) for item2 in my_list1]
-    thetresult2 = [round(item3 * 144 * 57.2958) for item3 in my_list2]
-    thetresult3 = [round(item4 * 32 * 57.2958) for item4 in my_list3]
-    thetresult4 = [round(item5 * 11 * 57.2958) for item5 in my_list4]
-    thetresult5 = [round(item6 * 10 * 57.2958) for item6 in my_list5]
+    R0_6 = [[0.0, 0.0, 1.0],
+            [0.0, -1.0, 0.0],
+            [1.0, 0.0, 0.0]]
+
+    R0_3 = [[sin(thet1 + thet2) * cos(thet0), sin(thet0), cos(thet1 + thet2) * cos(thet0)],
+            [sin(thet1 + thet2) * sin(thet0), -cos(thet0), cos(thet1 + thet2) * sin(thet0)],
+            [cos(thet1 + thet2), 0, -sin(thet1 + thet2)]]
+
+    invR0_3 = np.linalg.inv(R0_3)
+
+    R3_6 = np.dot(invR0_3, R0_6)
+
+    print(R3_6)
+    thet3 = thet3-(np.arctan2(R3_6[1][2], R3_6[0][2]))
+    print((np.arctan2(R3_6[1][2], R3_6[0][2])))
+    thet4 = thet4-(np.arccos(R3_6[2][2]))
+    print(thet4-(np.arccos(R3_6[2][2])))
+    if thet4 == 0 or thet4 == pi:
+        print("Theta")
+    thet5 = thet5-(np.arctan2(R3_6[2][1], R3_6[2][0]))
+    print((np.arctan2(R3_6[2][1], R3_6[2][0])))
+    print(R3_6[2][1], R3_6[2][0])
+    print(thet3,thet4,thet5)
+    th3=((thet3-(np.arctan2(R3_6[2][1], R3_6[2][0]))))
+    th4=((thet4-(np.arctan2(np.sqrt((R3_6[1][2])**2+(R3_6[0][2])**2),R3_6[2][2]))))
+    th5=((thet5-(np.arctan2(R3_6[1][2], -R3_6[0][2]))))
+
+    print(th3*degrad,th4*degrad,th4*degrad)
+    for i in range(rangen):
+        thetdel3.append(th3)
+        thetdel4.append(th4+(th3/2.95))
+        thetdel5.append(th5)
+
+    thetresult0 = [round(th0 * 142 * 57.2958) for th0 in thetdel0]
+    thetresult1 = [round(th1 * 944 * 57.2958) for th1 in thetdel1]
+    thetresult2 = [round(th2 * 144 * 57.2958) for th2 in thetdel2]
+    thetresult3 = [round(th3 * 32 ) for th3 in thetdel3]
+    thetresult4 = [round(th4 * 11 ) for th4 in thetdel4]
+    thetresult5 = [round(th5 * 10 ) for th5 in thetdel5]
+
     #ki kell egészíteni a diferencia kivonásával
     print(thetresult0)
     print(thetresult1)
@@ -317,8 +388,12 @@ def conMoveL(x,y,z):
     while arduino.read()!=b'k':  #acknowladge
         time.sleep(dela)
 
-#def posMoveL(xpos, ypos, zpos):
+def posMoveJ(xpos, ypos, zpos ,xrot, yrot, zrot):
 
+    buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5 = MoveJ(xpos, ypos, zpos ,xrot, yrot, zrot)
+    write_read(buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5)
+    while arduino.read()!=b'k':  #acknowladge
+        time.sleep(dela)
 def write_read(buff_0, buff_1, buff_2, buff_3, buff_4, buff_5):
     arduino.write(convert_to_bytes(buff_0))
     time.sleep(.2)
@@ -336,8 +411,8 @@ def write_read(buff_0, buff_1, buff_2, buff_3, buff_4, buff_5):
     time.sleep(.2)
     print(arduino.readall())
 
-nex=200.0 #start pos x
-ney=30.0
+nex=300.0 #start pos x
+ney=0.0
 nez=390.0
 dx=0 #pos dif
 dy=0
@@ -374,6 +449,30 @@ def gcode_read():
                 print(dx,dy,dz)
                 #print(nex,ney,nez)
 
+def gcode_read_ori():
+    # open gcode file and store contents as variable
+    with open('C:/Users/TormaPC/Documents/RoboDK/Programs/Prog2.txt', 'r') as f:
+        for line in f:
+            sor=str(line)
+            pat=re.compile('-?\d{1,4}\.')
+            sor_float=[]
+            for pos in re.findall(pat,sor): #make a list of all numbers 6 (3pos) (3orient)
+                sor_float.append(float(pos))
+
+            if (len(sor_float)>3):  # read the first 3 pos to a variable
+                x = sor_float[0]
+                y = sor_float[1]
+                z = sor_float[2]
+                xr = sor_float[3]
+                yr = sor_float[4]
+                zr = sor_float[5]
+
+                div=100
+                raddeg=57.2958
+                posMoveJ((x / div), (y / div), (z / div),(xr / raddeg), (yr / raddeg), (zr / raddeg))
+
+
+
 
 def manualL():
     while True:
@@ -405,15 +504,16 @@ def manualL():
 
 step=0.004
 dela=.01 #azért kell várni hogy ki tudja számolni az ik-t
-while True:
+#while True:
 
     #x = float(input("x: "))
     #y = float(input("y: "))
     #z = float(input("z: "))
 
-    time.sleep(1)
-    manualL()
 
+    #manualL()
+    #MoveTopG()
+    #time.sleep(10)
     #conMoveL(0,-step, 0)
     #conMoveL(0, step, 0)
     #gcode_read()
@@ -436,4 +536,5 @@ while True:
 
 
 #arduino steppeles optimalizalas
+
 
