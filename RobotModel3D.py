@@ -18,7 +18,7 @@ from gcodeparser import GcodeParser
 import keyboard
 
 
-#arduino = serial.Serial(port='COM6', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='COM6', baudrate=115200, timeout=.1)
 minn=-2
 maxn=2
 thet0=0.00001
@@ -140,16 +140,27 @@ def test():
 
 
 def MoveJ(xpos, ypos, zpos ,xrot=0, yrot=0, zrot=0):
-
+    global ik
+    global old_position
     stepc=20
     my_chain = ikpy.chain.Chain.from_urdf_file("robot.urdf",active_links_mask=[False, True, True, True, True, True, True])
 
     target_position = [xpos, ypos, zpos]
     target_orientation = [xrot, yrot, zrot]
 
-    ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="all")
+    try:
+        ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="all",
+                                         initial_position=old_position)
+        print(target_position, old_position)
+    except:
+        ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="all")
+
+
     iklist =ik.tolist()
+    old_position = ik.copy()
     iklist[5]=iklist[5]+iklist[4]/2.95
+    computed_position = my_chain.forward_kinematics(ik)
+    print(computed_position)
 
     print(iklist[0])
     thetresult0 = [round(iklist[1]* 142 * 57.2958 / stepc) for x in range(stepc)]
@@ -159,20 +170,21 @@ def MoveJ(xpos, ypos, zpos ,xrot=0, yrot=0, zrot=0):
     thetresult4 = [round(iklist[5] * 11 * 57.2958 / stepc) for th4 in range(stepc)]
     thetresult5 = [round(iklist[6] * 10 * 57.2958 / stepc) for th5 in range(stepc)]
 
+    print(thetresult0, thetresult1, thetresult2, thetresult3, thetresult4, thetresult5)
     return thetresult0, thetresult1, thetresult2, thetresult3, thetresult4, thetresult5
 
 #print("The angles of each joints are : ", list(map(lambda r: math.degrees(r), ik.tolist())))
 #kutyaaa=ik.tolist()[1]
 #print(kutyaaa)
-#computed_position = my_chain.forward_kinematics(ik)
+#
 #print("Computed position: %s, original position : %s" % (computed_position[:3, 3], target_position))
 #print("Computed position (readable) : %s" % ['%.2f' % elem for elem in computed_position[:3, 3]])
-print(MoveJ(3,0,4.2,1))
+
 
 def doIK():
     global ik
     old_position = ik.copy()
-    ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="Z",
+    ik = my_chain.inverse_kinematics(target_position, target_orientation, orientation_mode="all",
                                      initial_position=old_position)
 
 
@@ -383,7 +395,7 @@ def conMoveL(x,y,z):
     arraypos =[100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
     array3 = [35, 35, 35, 35, 35, 35, 35, 35, 35, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33]
     arrayneg = [-100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100, -100]
-    write_read(buffthd0, buffthd1, buffthd2, buffthd3, buffthd4, buffthd5)
+    write_read(buffthd0, buffthd1, buffthd2, arrayzero, arrayzero, arrayzero)
     #write_read(arrayzero,arrayzero,arrayzero,arraypos,array3,arrayzero)
     while arduino.read()!=b'k':  #acknowladge
         time.sleep(dela)
@@ -464,9 +476,9 @@ def gcode_read_ori():
                 y = sor_float[1]
                 z = sor_float[2]
                 xr = sor_float[3]
-                yr = sor_float[4]
+                yr = sor_float[4]-90
                 zr = sor_float[5]
-
+                print(x,y,z,xr,yr,zr)
                 div=100
                 raddeg=57.2958
                 posMoveJ((x / div), (y / div), (z / div),(xr / raddeg), (yr / raddeg), (zr / raddeg))
@@ -504,7 +516,7 @@ def manualL():
 
 step=0.004
 dela=.01 #azért kell várni hogy ki tudja számolni az ik-t
-#while True:
+while True:
 
     #x = float(input("x: "))
     #y = float(input("y: "))
@@ -513,11 +525,11 @@ dela=.01 #azért kell várni hogy ki tudja számolni az ik-t
 
     #manualL()
     #MoveTopG()
-    #time.sleep(10)
+    time.sleep(2)
     #conMoveL(0,-step, 0)
     #conMoveL(0, step, 0)
     #gcode_read()
-
+    gcode_read_ori()
     #conMoveL( 0,0,0)
     #print(arduino.readall())
 
